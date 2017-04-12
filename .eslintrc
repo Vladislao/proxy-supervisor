@@ -1,0 +1,131 @@
+{
+    "parser": "babel-eslint",
+  "extends": "airbnb",
+  "rules": {
+    "indent": [
+      2,
+      2,
+      {"SwitchCase": 1}
+    ],
+    "quotes": [
+      2,
+      "single"
+    ],
+    "linebreak-style": [
+      0,
+      "unix"
+    ],
+    "semi": [
+      2,
+      "always"
+    ],
+    "max-len": ["error", 180],
+    "no-console" : 1,
+    // treat var statements as if they were block scoped
+    "block-scoped-var": 2,
+     // specify the maximum cyclomatic complexity allowed in a program
+    "complexity": [0, 11],
+    // require return statements to either always or never specify values
+    "consistent-return": 2,
+    // specify curly brace conventions for all control statements
+    "curly": [2, "multi-line"],
+    // require default case in switch statements
+    "default-case": 2,
+    // encourages use of dot notation whenever possible
+    "dot-notation": [2, { "allowKeywords": true}],
+    // enforces consistent newlines before or after dots
+    "dot-location": 0,
+    // require the use of === and !==
+    "eqeqeq": 2,
+    // make sure for-in loops have an if statement
+    "guard-for-in": 2,
+    // disallow else after a return in an if
+    "no-else-return": 2,
+    // disallow use of eval()
+    "no-eval": 2,
+    // disallow unnecessary function binding
+    "no-extra-bind": 2,
+    // disallow fallthrough of case statements
+    "no-fallthrough": 2,
+    // disallow creation of functions within loops
+    "no-loop-func": 2,
+    // disallow use of multiple spaces
+    "no-multi-spaces": 2,
+    // disallow use of multiline strings
+    "no-multi-str": 2,
+    // disallow usage of __proto__ property
+    "no-proto": 2,
+    // disallow declaring the same variable more then once
+    "no-redeclare": 2,
+    // disallow unnecessary .call() and .apply()
+    "no-useless-call": 0,
+    // require space before/after arrow function"s arrow
+    // https://github.com/eslint/eslint/blob/master/docs/rules/arrow-spacing.md
+    "arrow-spacing": [2, { "before": true, "after": true }],
+    // disallow to use this/super before super() calling in constructors.
+    "no-this-before-super": 0,
+    // disallow modifying variables that are declared using const
+    "no-const-assign": 2,
+    // require let or const instead of var
+    "no-var": 2,
+    // suggest using of const declaration for variables that are never modified after declared
+    "prefer-const": 2,
+    // suggest using the spread operator instead of .apply()
+    "prefer-spread": 0,
+    // disallow duplicate arguments in functions
+    "no-dupe-args": 2,
+    // disallow duplicate keys when creating object literals
+    "no-dupe-keys": 2,
+    // disallow a duplicate case label.
+    "no-duplicate-case": 2,
+    // disallow empty statements
+    "no-empty": 2,
+    // disallow assigning to the exception in a catch block
+    "no-ex-assign": 2,
+    // disallow double-negation boolean casts in a boolean context
+    "no-extra-boolean-cast": 0,
+    // disallow unnecessary parentheses
+    "no-extra-parens": [2, "functions"],
+    // disallow unnecessary semicolons
+    "no-extra-semi": 2,
+    // disallow irregular whitespace outside of strings and comments
+    "no-irregular-whitespace": 2,
+    // disallow unreachable statements after a return, throw, continue, or break statement
+    "no-unreachable": 2,
+    // disallow comparisons with the value NaN
+    "use-isnan": 2,
+    // ensure JSDoc comments are valid
+    "valid-jsdoc": 0,
+    // ensure that the results of typeof are compared against a valid string
+    "valid-typeof": 2,
+    // Avoid code that looks like two expressions but is actually one
+    "no-unexpected-multiline": 0,
+    // trailing comma after bracket
+    "comma-dangle": 0,
+    // enforce spacing before and after comma
+    "comma-spacing": [2, {"before": false, "after": true}],
+    // require a capital letter for constructors
+    "new-cap": [2, {"newIsCap": true}],
+    // disallow the omission of parentheses when invoking a constructor with no arguments
+    "new-parens": 0,
+    // disallow use of variables before they are defined
+    "no-use-before-define": 2,
+    // disallow use of undeclared variables unless mentioned in a /*global */ block
+    "no-undef": 2,
+    // allow no-underscore-dangle
+    "no-underscore-dangle": 0,
+    // disallow shadowing of names such as arguments
+    "no-shadow-restricted-names": 2,
+    // disallow use of undefined when initializing variables
+    "no-undef-init": 0,
+    "no-param-reassign": ["error", { "props": false }],
+    "strict": ["error", "global"]
+  },
+  "env": {
+    "es6": true,
+    "node": true
+  },
+  "ecmaFeatures": {
+    "experimentalObjectRestSpread": true
+  }
+}
