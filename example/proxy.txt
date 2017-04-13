@@ -1,0 +1,7 @@
+Put your proxy list here
+
+Example:
+
+http://23.54.12.42:9999
+http://23.54.12.43:23452
+http://23.54.12.44:80

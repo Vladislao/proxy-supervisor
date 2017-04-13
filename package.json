@@ -1,14 +1,26 @@
 {
-  "name": "proxy",
-  "version": "1.0.0",
-  "description": "",
+  "name": "proxy-supervisor",
+  "version": "0.9.0",
+  "description": "Refresh, monitor and balance your proxies",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js 8119",
-    "test": "nyc --reporter=text-summary mocha test/**/*.test.js"
+    "test": "nyc mocha test/**/*.test.js"
   },
-  "author": "",
+  "author": "vladislao <netcemetry@yandex.ru>",
   "license": "ISC",
+  "repository": "vladislao/proxy-supervisor",
+  "keywords": [
+    "proxy",
+    "balance",
+    "rotation",
+    "rotate",
+    "monitor",
+    "supervise",
+    "supervisor"
+  ],
+  "engines": {
+    "node": ">= 7.0.0"
+  },
   "dependencies": {
     "js-promisify": "1.1.0",
     "request": "2.81.0"
