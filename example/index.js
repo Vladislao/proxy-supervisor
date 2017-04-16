@@ -1,18 +1,18 @@
 const http = require('http');
-const ProxySupervisor = require('../lib/supervisor');
+const fs = require('fs');
+const vicodin = require('../lib/balancer');
+const monitor = require('../lib/monitor');
 
-const supervisor = new ProxySupervisor()
-  .from('./proxy.txt');
+const proxies = fs.readFileSync('./proxy.txt', 'utf-8').split('\n').map(x => x.trim()).filter(x => x);
+const balancer = vicodin()
+  .source(monitor)
+  .add(proxies);
 
-const middleware = supervisor.proxy();
 const server = http.createServer((req, res) => {
   console.log(req.url);
-  return middleware(req, res, (e) => {
-    console.error(e);
+  return balancer.proxy()(req, res, (err) => {
+    console.log(err);
   });
 });
 
-// load proxies before starting a server
-supervisor.initialize().then(() => {
-  server.listen(9999);
-});
+server.listen(9999);
