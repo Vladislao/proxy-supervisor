@@ -4,11 +4,11 @@ const expect = require('chai').expect;
 const http = require('http');
 
 // proxy rotator
-const rotator = require('./text_rotator');
+const rotator = require('./tools/text_rotator');
 // mock proxy server
-const proxy = require('./test_proxy');
+const proxy = require('./tools/test_proxy');
 // mock endserver
-const endserver = require('./test_endserver');
+const endserver = require('./tools/test_endserver');
 
 const request = async (options, body) => new Promise((resolve, reject) => {
   const req = http
