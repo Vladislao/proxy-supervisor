@@ -1,4 +1,5 @@
 const expect = require('chai').expect;
+const url = require('url');
 const Balancer = require('../../../lib/core/balancer');
 
 describe('Core Balancer', () => {
@@ -36,6 +37,21 @@ describe('Core Balancer', () => {
       expect(proxy).to.exist;
       expect(proxy.url.protocol).to.be.eql('http:');
     });
+    it('should create new proxy with Url', () => {
+      const address = url.parse('http://127.0.0.1:3000');
+      const balancer = new Balancer().add([address]);
+      const proxy = balancer.proxies.get('127.0.0.1');
+
+      expect(proxy).to.exist;
+      expect(proxy.url.protocol).to.be.eql('http:');
+    });
+    it('should work with non-array parameter', () => {
+      const balancer = new Balancer().add('google');
+      const proxy = balancer.proxies.get('google');
+
+      expect(proxy).to.exist;
+      expect(proxy.url.protocol).to.be.eql('http:');
+    });
     it('should update node address', () => {
       const balancer = new Balancer().add(['127.0.0.1:3333']);
 
@@ -51,14 +67,29 @@ describe('Core Balancer', () => {
   });
 
   describe('.remove', () => {
-    it('should delete proxy', () => {
+    it('should delete proxy by host', () => {
       const balancer = new Balancer()
         .add(['127.0.0.1:3333'])
         .remove(['127.0.0.1']);
 
       expect(balancer.proxies.values()).to.be.empty;
     });
+    it('should delete proxy by Url', () => {
+      const address = url.parse('http://127.0.0.1:3333');
 
+      const balancer = new Balancer()
+        .add(['127.0.0.1:3333'])
+        .remove([address]);
+
+      expect(balancer.proxies.values()).to.be.empty;
+    });
+    it('should work with non-array parameter', () => {
+      const balancer = new Balancer()
+        .add(['127.0.0.1:3333'])
+        .remove('127.0.0.1');
+
+      expect(balancer.proxies.values()).to.be.empty;
+    });
     it('should not throw when proxy not found', () => {
       const balancer = new Balancer()
         .remove(['127.0.0.1']);

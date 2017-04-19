@@ -1,12 +1,28 @@
-const expect = require('chai').expect;
+const { expect, spy } = require('chai');
 const Monitor = require('../../lib/monitor');
 
 describe('Monitor', () => {
-  it('should be started after creation', (done) => {
-    const publisher = new Monitor({ interval: 100 });
-    publisher.check = () => { done(); };
-    setTimeout(() => { done('monitor check is not triggered!'); }, 200);
-  });
-  describe('.', () => {
+  describe('check', () => {
+    it('should trigger check after creation', (done) => {
+      const publisher = new Monitor({ interval: 0 });
+      const check = spy.on(publisher, 'check');
+
+      setTimeout(() => {
+        expect(check).to.be.spy;
+        expect(check).to.have.been.called();
+        done();
+      }, 30);
+    });
+
+    it('should be called periodically', (done) => {
+      const publisher = new Monitor({ interval: 0 });
+      const check = spy.on(publisher, 'check');
+
+      setTimeout(() => {
+        expect(check).to.be.spy;
+        expect(check).to.have.been.called.gt(2);
+        done();
+      }, 30);
+    });
   });
 });
