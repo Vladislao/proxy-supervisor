@@ -1,12 +1,15 @@
 const { expect, spy } = require('chai');
 const promisify = require('js-promisify');
-const request = require('request');
 
 const balancer = require('../../lib/balancer');
 const Monitor = require('../../lib/monitor');
 
 const proxy = require('../tools/test_proxy');
 const endserver = require('../tools/test_endserver');
+
+const GOOD_PROXY = 'http://127.0.0.1:23450/';
+const BAD_PROXY = 'http://127.0.0.1:23451/';
+const UNEXISTING_PROXY = 'http://127.0.0.1:23453/';
 
 describe('Monitor', function () {
   this.timeout(30000);
@@ -80,7 +83,7 @@ describe('Monitor', function () {
       monitor.stop();
 
       const listener = balancer()
-        .add(['http://127.0.0.1:23450/'])
+        .add([GOOD_PROXY])
         .subscribe(monitor);
       const remove = spy.on(listener, 'remove');
 
@@ -99,7 +102,7 @@ describe('Monitor', function () {
       monitor.stop();
 
       const listener = balancer()
-        .add(['http://127.0.0.1:23451/'])
+        .add([BAD_PROXY])
         .subscribe(monitor);
       const remove = spy.on(listener, 'remove');
 
@@ -118,7 +121,7 @@ describe('Monitor', function () {
       monitor.stop();
 
       const listener = balancer()
-        .add(['http://127.0.0.1:23453/'])
+        .add([UNEXISTING_PROXY])
         .subscribe(monitor);
       const remove = spy.on(listener, 'remove');
 
@@ -137,13 +140,13 @@ describe('Monitor', function () {
       monitor.stop();
 
       const listener1 = balancer()
-        .add(['http://127.0.0.1:23450/'])
+        .add([GOOD_PROXY])
         .subscribe(monitor);
       const listener2 = balancer()
-        .add(['http://127.0.0.1:23450/', 'http://127.0.0.1:23453/'])
+        .add([GOOD_PROXY, UNEXISTING_PROXY])
         .subscribe(monitor);
       const listener3 = balancer()
-        .add(['http://127.0.0.1:23451/'])
+        .add([BAD_PROXY])
         .subscribe(monitor);
 
       const remove1 = spy.on(listener1, 'remove');
@@ -160,6 +163,27 @@ describe('Monitor', function () {
         expect(listener1.proxies.size).to.be.eql(1);
         expect(listener2.proxies.size).to.be.eql(1);
         expect(listener3.proxies.size).to.be.eql(0);
+      });
+    });
+  });
+
+  describe('.onResponse', () => {
+    it('should apply custom logic', () => {
+      const monitor = new Monitor({ target: { method: 'GET', uri: 'http://127.0.0.1:23452', timeout: 30, headers: { 'request-chain': '(s)' } }, interval: 0 });
+      monitor.stop();
+      // we assume that every proxy is good enough
+      monitor.onResponse(() => true);
+
+      const listener = balancer()
+        .add([BAD_PROXY])
+        .subscribe(monitor);
+
+      const remove = spy.on(listener, 'remove');
+
+      return monitor.check().then((arr) => {
+        expect(arr.length).to.be.eql(0);
+        expect(remove).to.not.have.been.called();
+        expect(listener.proxies.size).to.be.eql(1);
       });
     });
   });
