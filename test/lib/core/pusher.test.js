@@ -9,4 +9,8 @@ describe('Core Publisher', () => {
       expect(publisher.listeners).to.be.not.empty;
     });
   });
+
+  describe('.getProxies', () => {
+
+  });
 });
