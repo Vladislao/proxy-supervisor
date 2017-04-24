@@ -18,24 +18,28 @@ describe('Monitor', function () {
   const badProxy = proxy((req, res) => setTimeout(() => { res.end('NOT OK'); }, 3000));
   const target = endserver();
 
-  before(async () => {
-    await promisify(goodProxy.listen, [23450, '127.0.0.1'], goodProxy);
-    await promisify(badProxy.listen, [23451, '127.0.0.1'], badProxy);
-    await promisify(target.listen, [23452, '127.0.0.1'], target);
-  });
+  before(() => Promise.all([
+    promisify(goodProxy.listen, [23450, '127.0.0.1'], goodProxy),
+    promisify(badProxy.listen, [23451, '127.0.0.1'], badProxy),
+    promisify(target.listen, [23452, '127.0.0.1'], target)
+  ]));
 
-  after(async () => {
-    await promisify(goodProxy.close, [], goodProxy);
-    await promisify(badProxy.close, [], badProxy);
-    await promisify(target.close, [], target);
-  });
+  after(() => Promise.all([
+    promisify(goodProxy.close, [], goodProxy),
+    promisify(badProxy.close, [], badProxy),
+    promisify(target.close, [], target)
+  ]));
 
-  process.on('exit', async () => {
+  process.on('exit', () => {
     try {
-      await promisify(goodProxy.close, [], goodProxy);
-      await promisify(badProxy.close, [], badProxy);
-      await promisify(target.close, [], target);
-    } catch (e) {}
+      return Promise.all([
+        promisify(goodProxy.close, [], goodProxy),
+        promisify(badProxy.close, [], badProxy),
+        promisify(target.close, [], target)
+      ]);
+    } catch (e) {
+      return Promise.reject(e);
+    }
   });
 
   it('should be started after creation', (done) => {
@@ -116,7 +120,7 @@ describe('Monitor', function () {
       });
     });
 
-    it('should remove proxy when connection to proxy node timed out', () => {
+    it('should remove proxy when connection to proxy server timed out', () => {
       const monitor = new Monitor({ target: { method: 'GET', uri: 'http://127.0.0.1:23452', timeout: 30, headers: { 'request-chain': '(s)' } }, interval: 0 });
       monitor.stop();
 

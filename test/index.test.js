@@ -10,7 +10,7 @@ const proxy = require('./tools/test_proxy')();
 // mock endserver
 const endserver = require('./tools/test_endserver')();
 
-const request = async (options, body) => new Promise((resolve, reject) => {
+const request = (options, body) => new Promise((resolve, reject) => {
   options.headers['request-chain'] = '(s)';
   const req = http
     .request(options, (res) => {
@@ -28,24 +28,28 @@ const request = async (options, body) => new Promise((resolve, reject) => {
 });
 
 const ensureServers = () => {
-  before(async () => {
-    await promisify(rotator.listen, [23450, '127.0.0.1'], rotator);
-    await promisify(proxy.listen, [23451, '127.0.0.1'], proxy);
-    await promisify(endserver.listen, [23452, '127.0.0.1'], endserver);
-  });
+  before(() => Promise.all([
+    promisify(rotator.listen, [23450, '127.0.0.1'], rotator),
+    promisify(proxy.listen, [23451, '127.0.0.1'], proxy),
+    promisify(endserver.listen, [23452, '127.0.0.1'], endserver)
+  ]));
 
-  after(async () => {
-    await promisify(rotator.close, [], rotator);
-    await promisify(proxy.close, [], proxy);
-    await promisify(endserver.close, [], endserver);
-  });
+  after(() => Promise.all([
+    promisify(rotator.close, [], rotator),
+    promisify(proxy.close, [], proxy),
+    promisify(endserver.close, [], endserver)
+  ]));
 
-  process.on('exit', async () => {
+  process.on('exit', () => {
     try {
-      await promisify(proxy.close, [], proxy);
-      await promisify(rotator.close, [], rotator);
-      await promisify(endserver.close, [], endserver);
-    } catch (e) {}
+      return Promise.all([
+        promisify(proxy.close, [], proxy),
+        promisify(rotator.close, [], rotator),
+        promisify(endserver.close, [], endserver)
+      ]);
+    } catch (e) {
+      return Promise.reject(e);
+    }
   });
 };
 
@@ -71,8 +75,8 @@ describe('environment', () => {
 const test = () => {
   ensureServers();
   describe('GET', () => {
-    it('should work without proxy', async () => {
-      const response = await request({
+    it('should work without proxy', () => {
+      return request({
         hostname: 'localhost',
         port: 23452,
         path: '/account/logon',
@@ -80,14 +84,14 @@ const test = () => {
         headers: {
           connection: 'close'
         }
+      }).then((response) => {
+        expect(response.res).to.be.eql('OK');
+        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23452 -> (e)');
       });
-
-      expect(response.res).to.be.eql('OK');
-      expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23452 -> (e)');
     });
 
-    it('should work with proxy', async () => {
-      const response = await request({
+    it('should work with proxy', () => {
+      return request({
         hostname: 'localhost',
         port: 23451,
         path: 'http://localhost:23452/account/logon',
@@ -96,14 +100,14 @@ const test = () => {
           connection: 'close',
           cookie: 'test=%#(%u0935uwj5'
         }
+      }).then((response) => {
+        expect(response.res).to.be.eql('OK');
+        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
       });
-
-      expect(response.res).to.be.eql('OK');
-      expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
     });
 
-    it('should work with proxy rotator', async () => {
-      const response = await request({
+    it('should work with proxy rotator', () => {
+      return request({
         hostname: 'localhost',
         port: 23450,
         path: 'http://localhost:23452/account/logon',
@@ -112,17 +116,17 @@ const test = () => {
           connection: 'close',
           cookie: 'test=%#(%u0935uwj5'
         }
+      }).then((response) => {
+        expect(response.res).to.be.eql('OK');
+        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
       });
-
-      expect(response.res).to.be.eql('OK');
-      expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
     });
   });
 
   describe('POST', () => {
     describe('Chunked', () => {
-      it('should work without proxy', async () => {
-        const response = await request({
+      it('should work without proxy', () => {
+        return request({
           hostname: 'localhost',
           port: 23452,
           path: '/account/logon',
@@ -130,14 +134,14 @@ const test = () => {
           headers: {
             connection: 'close'
           }
-        }, 'body');
-
-        expect(response.res).to.be.eql('OK');
-        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23452 -> (e)');
+        }, 'body').then((response) => {
+          expect(response.res).to.be.eql('OK');
+          expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23452 -> (e)');
+        });
       });
 
-      it('should work with proxy', async () => {
-        const response = await request({
+      it('should work with proxy', () => {
+        return request({
           hostname: 'localhost',
           port: 23451,
           path: 'http://localhost:23452/account/logon',
@@ -146,14 +150,14 @@ const test = () => {
             connection: 'close',
             cookie: 'test=%#(%u0935uwj5'
           }
-        }, 'body');
-
-        expect(response.res).to.be.eql('OK');
-        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        }, 'body').then((response) => {
+          expect(response.res).to.be.eql('OK');
+          expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        });
       });
 
-      it('should work with proxy', async () => {
-        const response = await request({
+      it('should work with proxy', () => {
+        return request({
           hostname: 'localhost',
           port: 23450,
           path: 'http://localhost:23452/account/logon',
@@ -162,16 +166,16 @@ const test = () => {
             connection: 'close',
             cookie: 'test=%#(%u0935uwj5'
           }
-        }, 'body');
-
-        expect(response.res).to.be.eql('OK');
-        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        }, 'body').then((response) => {
+          expect(response.res).to.be.eql('OK');
+          expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        });
       });
     });
 
     describe('Content-Length', () => {
-      it('should work without proxy', async () => {
-        const response = await request({
+      it('should work without proxy', () => {
+        return request({
           hostname: 'localhost',
           port: 23452,
           path: '/account/logon',
@@ -181,14 +185,14 @@ const test = () => {
             Cookie: 'test=%#(%u0935uwj5',
             'Content-Length': Buffer.byteLength('body')
           }
-        }, 'body');
-
-        expect(response.res).to.be.eql('OK');
-        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23452 -> (e)');
+        }, 'body').then((response) => {
+          expect(response.res).to.be.eql('OK');
+          expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23452 -> (e)');
+        });
       });
 
-      it('should work with proxy', async () => {
-        const response = await request({
+      it('should work with proxy', () => {
+        return request({
           hostname: 'localhost',
           port: 23451,
           path: 'http://localhost:23452/account/logon',
@@ -198,14 +202,14 @@ const test = () => {
             Cookie: 'test=%#(%u0935uwj5',
             'Content-Length': Buffer.byteLength('body')
           }
-        }, 'body');
-
-        expect(response.res).to.be.eql('OK');
-        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        }, 'body').then((response) => {
+          expect(response.res).to.be.eql('OK');
+          expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        });
       });
 
-      it('should work with proxy', async () => {
-        const response = await request({
+      it('should work with proxy', () => {
+        return request({
           hostname: 'localhost',
           port: 23450,
           path: 'http://localhost:23452/account/logon',
@@ -215,10 +219,10 @@ const test = () => {
             Cookie: 'test=%#(%u0935uwj5',
             'Content-Length': Buffer.byteLength('body')
           }
-        }, 'body');
-
-        expect(response.res).to.be.eql('OK');
-        expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        }, 'body').then((response) => {
+          expect(response.res).to.be.eql('OK');
+          expect(response.headers['request-chain']).to.be.eql('(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)');
+        });
       });
     });
   });
