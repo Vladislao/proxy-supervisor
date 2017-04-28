@@ -2,17 +2,16 @@
 const promisify = require('js-promisify');
 const expect = require('chai').expect;
 const http = require('http');
+const https = require('https');
+const fs = require('fs');
 
-// proxy rotator
-const rotator = require('./tools/text_rotator');
-// mock proxy server
-const proxy = require('./tools/test_proxy')();
-// mock endserver
-const endserver = require('./tools/test_endserver')();
+const makeRotator = require('./tools/text_rotator');
+const makeProxy = require('./tools/test_proxy');
+const makeEndserver = require('./tools/test_endserver');
 
-const request = (options, body) => new Promise((resolve, reject) => {
+const request = (protocol, options, body) => new Promise((resolve, reject) => {
   options.headers['request-chain'] = '(s)';
-  const req = http
+  const req = protocol
     .request(options, (res) => {
       let rawData = '';
       res.on('data', (chunk) => rawData += chunk);
@@ -27,7 +26,11 @@ const request = (options, body) => new Promise((resolve, reject) => {
   req.end();
 });
 
-const ensureServers = () => {
+const ensureServers = (protocol) => {
+  const rotator = makeRotator(protocol);
+  const proxy = makeProxy(protocol);
+  const endserver = makeEndserver(protocol);
+
   before(() => Promise.all([
     promisify(rotator.listen, [23450, '127.0.0.1'], rotator),
     promisify(proxy.listen, [23451, '127.0.0.1'], proxy),
@@ -51,32 +54,34 @@ const ensureServers = () => {
       return Promise.reject(e);
     }
   });
+
+  return { rotator, proxy, endserver };
 };
 
-describe('environment', () => {
-  ensureServers();
-  it('rotator should be available', () => {
-    const conf = rotator.address();
-    expect(conf).to.be.not.null;
-    expect(conf.port).to.be.eql(23450);
-  });
-  it('proxy should be available', () => {
-    const conf = proxy.address();
-    expect(conf).to.be.not.null;
-    expect(conf.port).to.be.eql(23451);
-  });
-  it('endserver should be available', () => {
-    const conf = endserver.address();
-    expect(conf).to.be.not.null;
-    expect(conf.port).to.be.eql(23452);
-  });
-});
 
-const test = () => {
-  ensureServers();
+const test = (protocol) => {
+  const { rotator, proxy, endserver } = ensureServers(protocol);
+  describe('Environment', () => {
+    it('rotator should be available', () => {
+      const conf = rotator.address();
+      expect(conf).to.be.not.null;
+      expect(conf.port).to.be.eql(23450);
+    });
+    it('proxy should be available', () => {
+      const conf = proxy.address();
+      expect(conf).to.be.not.null;
+      expect(conf.port).to.be.eql(23451);
+    });
+    it('endserver should be available', () => {
+      const conf = endserver.address();
+      expect(conf).to.be.not.null;
+      expect(conf.port).to.be.eql(23452);
+    });
+  });
+
   describe('GET', () => {
     it('should work without proxy', () => {
-      return request({
+      return request(protocol, {
         hostname: 'localhost',
         port: 23452,
         path: '/account/logon',
@@ -91,7 +96,7 @@ const test = () => {
     });
 
     it('should work with proxy', () => {
-      return request({
+      return request(protocol, {
         hostname: 'localhost',
         port: 23451,
         path: 'http://localhost:23452/account/logon',
@@ -107,7 +112,7 @@ const test = () => {
     });
 
     it('should work with proxy rotator', () => {
-      return request({
+      return request(protocol, {
         hostname: 'localhost',
         port: 23450,
         path: 'http://localhost:23452/account/logon',
@@ -126,7 +131,7 @@ const test = () => {
   describe('POST', () => {
     describe('Chunked', () => {
       it('should work without proxy', () => {
-        return request({
+        return request(protocol, {
           hostname: 'localhost',
           port: 23452,
           path: '/account/logon',
@@ -141,7 +146,7 @@ const test = () => {
       });
 
       it('should work with proxy', () => {
-        return request({
+        return request(protocol, {
           hostname: 'localhost',
           port: 23451,
           path: 'http://localhost:23452/account/logon',
@@ -157,7 +162,7 @@ const test = () => {
       });
 
       it('should work with proxy', () => {
-        return request({
+        return request(protocol, {
           hostname: 'localhost',
           port: 23450,
           path: 'http://localhost:23452/account/logon',
@@ -175,7 +180,7 @@ const test = () => {
 
     describe('Content-Length', () => {
       it('should work without proxy', () => {
-        return request({
+        return request(protocol, {
           hostname: 'localhost',
           port: 23452,
           path: '/account/logon',
@@ -192,7 +197,7 @@ const test = () => {
       });
 
       it('should work with proxy', () => {
-        return request({
+        return request(protocol, {
           hostname: 'localhost',
           port: 23451,
           path: 'http://localhost:23452/account/logon',
@@ -209,7 +214,7 @@ const test = () => {
       });
 
       it('should work with proxy', () => {
-        return request({
+        return request(protocol, {
           hostname: 'localhost',
           port: 23450,
           path: 'http://localhost:23452/account/logon',
@@ -228,12 +233,26 @@ const test = () => {
   });
 };
 
-describe('HTTP', () => {
-  test('http');
-});
+// describe('HTTP', () => {
+//   test(http);
+// });
 
 describe('HTTPS', () => {
-  it('not implemented', () => {
-    expect(false).to.be.true;
-  });
+  const secure = {
+    key: fs.readFileSync('test/keys/key.pem'),
+    cert: fs.readFileSync('test/keys/cert.pem')
+  };
+  // patch server
+  const defaultCreateServer = https.createServer;
+  https.createServer = fn => defaultCreateServer(secure, fn);
+
+  // patch client
+  const defaultRequest = https.request;
+  https.request = (options, fn) => {
+    // const secured = Object.assign(options, secure);
+    // const agent = new https.Agent(secured);
+    return defaultRequest(Object.assign(options, { rejectUnauthorized: false }), fn);
+  };
+
+  test(https);
 });

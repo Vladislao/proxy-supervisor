@@ -1,11 +1,12 @@
+const http = require('http');
 const { expect, spy } = require('chai');
 const promisify = require('js-promisify');
 
 const balancer = require('../../lib/balancer');
 const Monitor = require('../../lib/monitor');
 
-const proxy = require('../tools/test_proxy');
-const endserver = require('../tools/test_endserver');
+const makeProxy = require('../tools/test_proxy');
+const makeEndserver = require('../tools/test_endserver');
 
 const GOOD_PROXY = 'http://127.0.0.1:23450/';
 const BAD_PROXY = 'http://127.0.0.1:23451/';
@@ -14,9 +15,9 @@ const UNEXISTING_PROXY = 'http://127.0.0.1:23453/';
 describe('Monitor', function () {
   this.timeout(30000);
 
-  const goodProxy = proxy();
-  const badProxy = proxy((req, res) => setTimeout(() => { res.end('NOT OK'); }, 3000));
-  const target = endserver();
+  const goodProxy = makeProxy(http);
+  const badProxy = makeProxy(http, (req, res) => setTimeout(() => { res.end('NOT OK'); }, 3000));
+  const target = makeEndserver(http);
 
   before(() => Promise.all([
     promisify(goodProxy.listen, [23450, '127.0.0.1'], goodProxy),

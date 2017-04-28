@@ -1,5 +1,3 @@
-const http = require('http');
-
 const def = (req, res) => {
   if (req.method === 'POST') {
     let body = '';
@@ -13,8 +11,8 @@ const def = (req, res) => {
   return res.end('OK');
 };
 
-module.exports = (fn = def) => {
-  const server = http.createServer((req, res) => {
+module.exports = (protocol, fn = def) => {
+  const server = protocol.createServer((req, res) => {
     const address = server.address();
     res.setHeader('request-chain', `${req.headers['request-chain']} -> ${address.address}:${address.port}`);
     fn(req, res, server);
