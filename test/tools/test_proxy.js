@@ -2,11 +2,9 @@ const request = require('request').defaults({ rejectUnauthorized: false, strictS
 const url = require('url');
 const net = require('net');
 
-const def = (req, res) => {
-  return req.pipe(request(req.url))
+const def = (req, res) => req.pipe(request(req.url))
             .on('error', (e) => { console.error(e); res.end('NOT OK!'); })
             .pipe(res);
-};
 
 module.exports = (protocol, fn = def) => {
   const server = protocol.createServer((req, res) => {
