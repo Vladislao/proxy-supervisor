@@ -5,7 +5,7 @@ const http = require('http');
 const https = require('https');
 const fs = require('fs');
 
-const makeRotator = require('./tools/text_rotator');
+const makeRotator = require('./tools/test_rotator');
 const makeProxy = require('./tools/test_proxy');
 const makeEndserver = require('./tools/test_endserver');
 
@@ -26,8 +26,8 @@ const request = (protocol, options, body) => new Promise((resolve, reject) => {
   req.end();
 });
 
-const ensureServers = (protocol) => {
-  const rotator = makeRotator(protocol);
+const ensureServers = (protocol, protocolString) => {
+  const rotator = makeRotator(protocol, [protocolString + '://127.0.0.1:23451']);
   const proxy = makeProxy(protocol);
   const endserver = makeEndserver(protocol);
 
@@ -59,8 +59,8 @@ const ensureServers = (protocol) => {
 };
 
 
-const test = (protocol) => {
-  const { rotator, proxy, endserver } = ensureServers(protocol);
+const test = (protocol, protocolString) => {
+  const { rotator, proxy, endserver } = ensureServers(protocol, protocolString);
   describe('Environment', () => {
     it('rotator should be available', () => {
       const conf = rotator.address();
@@ -99,7 +99,7 @@ const test = (protocol) => {
       return request(protocol, {
         hostname: 'localhost',
         port: 23451,
-        path: 'http://localhost:23452/account/logon',
+        path: protocolString + '://localhost:23452/account/logon',
         method: 'GET',
         headers: {
           connection: 'close',
@@ -115,7 +115,7 @@ const test = (protocol) => {
       return request(protocol, {
         hostname: 'localhost',
         port: 23450,
-        path: 'http://localhost:23452/account/logon',
+        path: protocolString + '://localhost:23452/account/logon',
         method: 'GET',
         headers: {
           connection: 'close',
@@ -149,7 +149,7 @@ const test = (protocol) => {
         return request(protocol, {
           hostname: 'localhost',
           port: 23451,
-          path: 'http://localhost:23452/account/logon',
+          path: protocolString + '://localhost:23452/account/logon',
           method: 'POST',
           headers: {
             connection: 'close',
@@ -165,7 +165,7 @@ const test = (protocol) => {
         return request(protocol, {
           hostname: 'localhost',
           port: 23450,
-          path: 'http://localhost:23452/account/logon',
+          path: protocolString + '://localhost:23452/account/logon',
           method: 'POST',
           headers: {
             connection: 'close',
@@ -200,7 +200,7 @@ const test = (protocol) => {
         return request(protocol, {
           hostname: 'localhost',
           port: 23451,
-          path: 'http://localhost:23452/account/logon',
+          path: protocolString + '://localhost:23452/account/logon',
           method: 'POST',
           headers: {
             Connection: 'close',
@@ -217,7 +217,7 @@ const test = (protocol) => {
         return request(protocol, {
           hostname: 'localhost',
           port: 23450,
-          path: 'http://localhost:23452/account/logon',
+          path: protocolString + '://localhost:23452/account/logon',
           method: 'POST',
           headers: {
             Connection: 'close',
@@ -233,9 +233,9 @@ const test = (protocol) => {
   });
 };
 
-// describe('HTTP', () => {
-//   test(http);
-// });
+describe('HTTP', () => {
+  test(http, 'http');
+});
 
 describe('HTTPS', () => {
   const secure = {
@@ -251,8 +251,8 @@ describe('HTTPS', () => {
   https.request = (options, fn) => {
     // const secured = Object.assign(options, secure);
     // const agent = new https.Agent(secured);
-    return defaultRequest(Object.assign(options, { rejectUnauthorized: false }), fn);
+    return defaultRequest(Object.assign({}, options, { rejectUnauthorized: false, strictSSL: false }), fn);
   };
 
-  test(https);
+  test(https, 'https');
 });

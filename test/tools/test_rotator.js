@@ -1,8 +1,6 @@
-const fs = require('fs');
 const balancer = require('../../lib/balancer');
 
-module.exports = (protocol) => {
-  const proxies = fs.readFileSync('./test/proxy.txt', 'utf-8').split('\n').map(x => x.trim()).filter(x => x);
+module.exports = (protocol, proxies) => {
   const middleware = balancer()
     .add(proxies)
     .proxy();
@@ -11,7 +9,7 @@ module.exports = (protocol) => {
     const address = server.address();
     req.headers['request-chain'] += ` -> ${address.address}:${address.port}`;
 
-    middleware(req, res);
+    middleware(req, res, (e) => { if (e) { console.log(e); } }, { tunnel: false });
   });
   return server;
 };
