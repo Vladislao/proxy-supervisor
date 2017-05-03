@@ -47,14 +47,14 @@ $ npm install proxy-supervisor
   const awesomeBalancer = balancer().subscribe(source1).subscribe(source2);
   ```
 
-  Done! Sources will automatically replenish your balancer with new proxies. You should be able to find more sources on github.com. So, what about unreachable proxies? Let's add monitor to filter them out!
+  Done! Sources will automatically replenish your balancer with new proxies. You should be able to find more sources on [github](https://github.com/). So, what about unreachable proxies? Let's add monitor to filter them out!
 
   ```javascript
   const monitor = require('proxy-supervisor').monitor;
   awesomeBalancer.subscribe(monitor);
   ```
 
-  Monitor will trigger every 5 minutes and remove proxies, that didn't responded with successful status code. By default all requests are made to requestb.in. Best practice would be to specify your own server, to make sure that proxies are realy unavailable and it's not just endpoint failure.
+  Monitor will trigger every 5 minutes and remove proxies, that didn't responded with successful status code. By default all requests are made to [requestb.in](http://requestb.in/). Best practice would be to specify your own server, to make sure that proxies are realy unavailable and it's not just endpoint failure.
 
   You are not limited in the way you want to use balancers. For example, you can have multiple balancers on different routes. Sources designed to work with multiple balancers.
 
@@ -154,7 +154,7 @@ $ npm install proxy-supervisor
 #### new Monitor([options])
   * **options** *\<Object\>* Set of configurable options to set on the monitor. Can have the following fields:
   	* **interval** *\<Integer\>* Specifies how much time should pass after last check is completed. Defaults to 5 minutes.
-  	* **options** *\<Object\>* Options containing connection details. Check [request](https://github.com/request/request#requestoptions-callback) for the format of the options. You probably want to specify your own **target** or **timeout**. By default all requests will be sent to requestb.in, lol.
+  	* **options** *\<Object\>* Options containing connection details. Check [request](https://github.com/request/request#requestoptions-callback) for the format of the options. You probably want to specify your own **target** or **timeout**. By default all requests will be sent to [requestb.in](http://requestb.in/).
 
   Monitor is started automatically on creation, and will trigger for the first time after specified **interval** is passed.
 
