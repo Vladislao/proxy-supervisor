@@ -7,7 +7,7 @@
     "test": "nyc mocha test/**/**/*.test.js"
   },
   "author": "vladislao <netcemetry@yandex.ru>",
-  "license": "ISC",
+  "license": "MIT",
   "repository": "vladislao/proxy-supervisor",
   "keywords": [
     "proxy",

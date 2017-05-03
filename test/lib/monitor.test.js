@@ -3,7 +3,7 @@ const { expect, spy } = require('chai');
 const promisify = require('js-promisify');
 
 const balancer = require('../../lib/balancer');
-const Monitor = require('../../lib/monitor');
+const Monitor = require('../../lib/monitor').Monitor;
 
 const makeProxy = require('../tools/test_proxy');
 const makeEndserver = require('../tools/test_endserver');

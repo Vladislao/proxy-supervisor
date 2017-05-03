@@ -1,12 +1,12 @@
 const expect = require('chai').expect;
-const Publisher = require('../../../lib/core/publisher');
+const Source = require('../../../lib/core/source');
 
-describe('Core Publisher', () => {
+describe('Core Source', () => {
   describe('.addListener', () => {
     it('should add listners', () => {
-      const publisher = new Publisher();
-      publisher.addListener({});
-      expect(publisher.listeners).to.be.not.empty;
+      const source = new Source();
+      source.addListener({});
+      expect(source.listeners).to.be.not.empty;
     });
   });
 
