@@ -26,7 +26,7 @@ $ npm install proxy-supervisor
   const balancer = require('proxy-supervisor').balancer;
 
   const awesomeBalancer = balancer()
-    .add(['http://10.0.0.1:3001', 'http://10.0.0.2:3001']);
+   .add(['http://10.0.0.1:3001', 'http://10.0.0.2:3001']);
   ```
 
   Great! Now let's get it to work. Create a middleware and put it in your route. To simplify example, we will use plain http server.
@@ -64,16 +64,16 @@ $ npm install proxy-supervisor
   const source = require('ps-hidemyass');
 
   const freeBalancer = balancer()
-    .subscribe(source)
-    .subscribe(monitor);
+   .subscribe(source)
+   .subscribe(monitor);
 
   const privateBalancer = balancer()
-  	.add(['https://10.0.0.1:3001', 'https://10.0.0.2:3001'])
-    .subscribe(monitor);
+   .add(['https://10.0.0.1:3001', 'https://10.0.0.2:3001'])
+   .subscribe(monitor);
 
   const app = express()
-  	.use('/free', freeBalancer.proxy())
-    .use('/private', privateBalancer.proxy())
+   .use('/free', freeBalancer.proxy())
+   .use('/private', privateBalancer.proxy())
 
   app.listen(3000);
   ```
