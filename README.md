@@ -19,7 +19,7 @@ $ npm install proxy-supervisor
 
 ## How to play
 
-  Just create a balancer and add some proxies. Specified addresses are for example purposes only.
+  Just initialize a balancer and add some proxies. Specified addresses are for example purposes only.
 
   ```javascript
   const http = require('http');
@@ -29,7 +29,7 @@ $ npm install proxy-supervisor
     .add(['http://10.0.0.1:3001', 'http://10.0.0.2:3001']);
   ```
 
-  Great! Now let's get it to work. Create a middleware and put it in your route. For simpliсity we will use plain http server.
+  Great! Now let's get it to work. Create a middleware and put it in your route. To simplify example, we will use plain http server.
 
   ```javascript
   http.createServer(awesomeBalancer.proxy()).listen(3000);
@@ -37,7 +37,7 @@ $ npm install proxy-supervisor
 
   Awesome! Next step is to set your balancing server as a proxy server wherever you want to use proxies. This server will proxy requests using specified list of proxies. The final trace will look like that *(you) -> (balancer) -> (proxy) -> (endpoint)*.
 
-  Finding proxies and adding them by hand is painful. Even more, you will probably want to remove dead ones. To simplify that process you can use *sources*. Let's add a new sources of proxies.
+  Finding proxies and adding them by hand is painful. Even more, you will probably want to remove dead ones. To simplify that process you can use *sources*. Let's add a few sources.
 
   ```javascript
   const balancer = require('proxy-supervisor').balancer;
@@ -54,9 +54,9 @@ $ npm install proxy-supervisor
   awesomeBalancer.subscribe(monitor);
   ```
 
-  Monitor will trigger every 5 minutes and remove proxies, that didn't responded with successful status code. By default all requests are made to [requestb.in](http://requestb.in/). Best practice would be to specify your own server, to make sure that proxies are realy unavailable and it's not just endpoint failure.
+  Monitor will trigger for every 5 minutes and remove proxies, that didn't respond with successful status code. By default all requests are made to [requestb.in](http://requestb.in/). Best practice would be to specify your own server, to make sure that proxies are realy unavailable and it's not just endpoint failure.
 
-  You are not limited in the way you want to use balancers. For example, you can have multiple balancers on different routes. Sources designed to work with multiple balancers.
+  You are not limited in the way you can use balancers. For example, you can have different balancers on different routes. Sources designed to work with multiple balancers.
 
   ```javascript
   const express = require('experss');
