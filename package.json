@@ -8,19 +8,25 @@
   },
   "author": "vladislao <netcemetry@yandex.ru>",
   "license": "MIT",
-  "repository": "vladislao/proxy-supervisor",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vladislao/proxy-supervisor.git"
+  },
   "keywords": [
     "proxy",
-    "balance",
-    "rotation",
-    "rotate",
-    "monitor",
-    "supervise",
-    "supervisor"
+    "proxy list",
+    "proxy pool",
+    "proxy aggregator",
+    "proxy crawler",
+    "proxy balancer"
   ],
   "engines": {
     "node": ">= 6.0.0"
   },
+  "bugs": {
+    "url": "https://github.com/Vladislao/proxy-supervisor/issues"
+  },
+  "homepage": "https://github.com/Vladislao/proxy-supervisor#readme",
   "dependencies": {
     "js-promisify": "1.1.0",
     "request": "2.81.0"
