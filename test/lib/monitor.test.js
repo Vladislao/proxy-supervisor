@@ -3,11 +3,11 @@ const { expect, spy } = require('chai');
 const promisify = require('js-promisify');
 
 const balancer = require('../../lib/balancer');
-const Monitor = require('../../lib/monitor').Monitor;
-
+const source = require('../../lib/monitor');
 const makeProxy = require('../tools/test_proxy');
 const makeEndserver = require('../tools/test_endserver');
 
+const Monitor = source.Monitor;
 const GOOD_PROXY = 'http://127.0.0.1:23450/';
 const BAD_PROXY = 'http://127.0.0.1:23451/';
 const UNEXISTING_PROXY = 'http://127.0.0.1:23453/';
@@ -41,6 +41,18 @@ describe('Monitor', function () {
     } catch (e) {
       return Promise.reject(e);
     }
+  });
+
+  it('should expose singleton instance', () => {
+    expect(typeof source).to.be.eql('function');
+
+    const instance = source();
+    instance.stop();
+
+    expect(instance).to.be.instanceof(Monitor);
+
+    const instance2 = source();
+    expect(instance2).to.be.equal(instance);
   });
 
   it('should be started after creation', (done) => {
