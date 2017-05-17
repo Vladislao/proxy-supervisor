@@ -42,12 +42,12 @@ $ npm install proxy-supervisor
   ```javascript
   const balancer = require('proxy-supervisor').balancer;
   const source1 = require('ps-free-proxy-list');
-  const source2 = require('ps-hidemyass');
+  const source2 = require('ps-nordvpn');
 
   const awesomeBalancer = balancer().subscribe(source1).subscribe(source2);
   ```
 
-  Done! Sources will automatically replenish your balancer with new proxies. You should be able to find more sources on [github](https://github.com/). So, what about unreachable proxies? Let's add monitor to filter them out!
+  Done! Sources will automatically replenish your balancer with new proxies. You should be able to find more sources on [github](https://github.com/). So, what about unreachable proxies? Let's add a monitor to filter them out!
 
   ```javascript
   const monitor = require('proxy-supervisor').monitor;
