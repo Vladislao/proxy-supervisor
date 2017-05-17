@@ -61,7 +61,7 @@ $ npm install proxy-supervisor
   ```javascript
   const express = require('experss');
   const { balancer, monitor } = require('proxy-supervisor');
-  const source = require('ps-hidemyass');
+  const source = require('ps-nordvpn');
 
   const freeBalancer = balancer()
    .subscribe(source)
