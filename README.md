@@ -13,7 +13,7 @@ $ npm install proxy-supervisor
   * Robust balancing
   * Monitoring, replenishment
   * HTTP, HTTPS, tunnels
-  * Design supporting multiple proxy sources
+  * Designed to support multiple proxy sources
   * High performance
   * High test coverage
 
