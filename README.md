@@ -19,6 +19,10 @@ $ npm install proxy-supervisor
 
 ## How to play
 
+  If you want simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli)
+
+## Usage
+
   Just initialize a balancer and add some proxies. Specified addresses are for example purposes only.
 
   ```javascript
