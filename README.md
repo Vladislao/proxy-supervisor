@@ -58,7 +58,7 @@ $ npm install proxy-supervisor
   awesomeBalancer.subscribe(monitor);
   ```
 
-  Monitor will trigger for every 5 minutes and remove proxies, that didn't respond with successful status code. By default all requests are made to [requestb.in](http://requestb.in/). Best practice would be to specify your own server, to make sure that proxies are realy unavailable and it's not just endpoint failure.
+  Monitor will trigger for every 5 minutes and remove proxies, that didn't respond with successful status code. By default, all requests are made to [requestb.in](http://requestb.in/). Best practice would be to specify your own server, to make sure that proxies are really unavailable and it's not just endpoint failure.
 
   You are not limited in the way you can use balancers. For example, you can have different balancers on different routes. Sources designed to work with multiple balancers.
 
@@ -94,19 +94,19 @@ $ npm install proxy-supervisor
   * **proxies** *\<Array\> | \<Url\> | \<String\>* List of proxy servers to be added.
   * Returns: *this*.
 
-  Adds specified proxies to the list of current balancer.
+  Adds specified proxies to the list of the current balancer.
 
 #### balancer.remove(proxies)
   * **proxies** *\<Array\> | \<Url\> | \<String\>* List of proxy servers to be added.
   * Returns: *this*.
 
-  Removes specified proxies from the list of current balancer.
+  Removes specified proxies from the list of the current balancer.
 
 #### balancer.subscribe(source)
   * **source** *\<Source\>* Source to listen.
   * Returns: *this*.
 
-  Subscribes to specified source.
+  Subscribes to the specified source.
 
 #### balancer.proxy([options])
   * **options** *\<Object\>* Options containing connection details. Check [request](https://github.com/request/request#requestoptions-callback) for the format of the options.
@@ -117,7 +117,7 @@ $ npm install proxy-supervisor
 #### balancer.onNext(callback)
   * **callback** *\<Function\>* Callback function that returns a next proxy to be used.
 
-  You can specify your own balancing algorithm. Callback has a signature of *(proxies)* and should return a single *\<Url\>* from list.
+  You can specify your own balancing algorithm. Callback has a signature of *(proxies)* and should return a single *\<Url\>* from a list.
 
 #### balancer.onAdd(callback)
   * **callback** *\<Function\>* Callback function that returns a new proxy.
@@ -127,12 +127,12 @@ $ npm install proxy-supervisor
 #### balancer.onResponse(callback)
   * **callback** *\<Function\>* Callback function that handles response statuses.
 
-  Callback has a signature of *(proxy, res)* and will be called each time a request is completed. State of proxy can be modified.
+  Callback has a signature of *(proxy, res)* and will be called each time a request is completed. State of the proxy can be modified.
 
 #### balancer.onError(callback)
   * **callback** *\<Function\>* Callback function that handles request errors.
 
-  Callback has a signature of *(proxy, err)* and will be called each time a request resulted in error. State of proxy can be modified.
+  Callback has a signature of *(proxy, err)* and will be called each time a request resulted in an error. State of the proxy can be modified.
 
 
 ### Source
@@ -141,15 +141,15 @@ $ npm install proxy-supervisor
   and adding them to listeners.
 
 #### source.addListener(listener)
-  * **listener** *\<Balancer\>* A balancer which will be added to list of listeners.
+  * **listener** *\<Balancer\>* A balancer which will be added to the list of listeners.
   * Returns: *this*
 
-  Method simply attaches a balancer to the source.
+  This method simply attaches a balancer to the source.
 
 #### source.proxies()
   * Returns: *\<Array\>* Returns list of unique proxy urls.
 
-  Helper function to retrieve list of proxies from all listeners. Proxies are unique across array and represented as [*\<Url\>*](https://nodejs.org/api/url.html#url_url_strings_and_url_objects).
+  Helper function to retrieve the list of proxies from all listeners. Proxies are unique across the array and represented as [*\<Url\>*](https://nodejs.org/api/url.html#url_url_strings_and_url_objects).
 
 ### Monitor
 
@@ -157,14 +157,14 @@ $ npm install proxy-supervisor
 
 #### new Monitor([options])
   * **options** *\<Object\>* Set of configurable options to set on the monitor. Can have the following fields:
-  	* **interval** *\<Integer\>* Specifies how much time should pass after last check is completed. Defaults to 5 minutes.
-  	* **options** *\<Object\>* Options containing connection details. Check [request](https://github.com/request/request#requestoptions-callback) for the format of the options. You probably want to specify your own **target** or **timeout**. By default all requests will be sent to [requestb.in](http://requestb.in/).
+  	* **interval** *\<Integer\>* Specifies how much time should pass after the last check is completed. Defaults to 5 minutes.
+  	* **options** *\<Object\>* Options containing connection details. Check [request](https://github.com/request/request#requestoptions-callback) for the format of the options. You probably want to specify your own **target** or **timeout**. By default, all requests will be sent to [requestb.in](http://requestb.in/).
 
-  Monitor is started automatically on creation, and will trigger for the first time after specified **interval** is passed.
+  Monitor is started automatically on creation, and will trigger for the first time after the specified **interval** is passed.
 
 #### monitor.start()
 
-  Starts a monitor. Use only in case you have stopped monitor manually. Monitor is started automatically on creation and can work with empty list of listeners.
+  Starts a monitor. Use only in case you have stopped monitor manually. Monitor is started automatically on the creation and can work with an empty list of listeners.
 
 #### monitor.stop()
 
@@ -173,7 +173,7 @@ $ npm install proxy-supervisor
 #### monitor.check()
   * Returns: *\<Promise\>* A promise, which resolves into an array of dead proxies. Those proxies are already removed from listeners.
 
-  Validates proxies. This method will create parallel requests to the target location for each proxy. Timed out, unreachable or blocked proxies will be removed from all listeners. By default valid status codes are *200, 201, 202*.
+  Validates proxies. This method will create parallel requests to the target location for each proxy. Timed out, unreachable or blocked proxies will be removed from all listeners. By default, valid status codes are *200, 201, 202*.
 
 #### monitor.onResponse(callback)
   You can specify your own handler for proxies. Callback should have a signature of *(err, proxy, res, body)* and return *true* for valid proxy and *false* otherwise.
