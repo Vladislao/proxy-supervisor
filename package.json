@@ -32,18 +32,21 @@
     "request": "2.81.0"
   },
   "devDependencies": {
-    "babel-eslint": "7.1.1",
+    "babel-eslint": "7.2.3",
     "casual": "1.5.11",
     "chai": "3.5.0",
     "chai-as-promised": "6.0.0",
     "chai-spies": "0.7.1",
     "eslint": "3.19.0",
     "eslint-config-airbnb": "14.1.0",
-    "eslint-plugin-import": "2.2.0",
+    "eslint-config-prettier": "^2.9.0",
+    "eslint-plugin-import": "2.7.0",
     "eslint-plugin-jsx-a11y": "4.0.0",
+    "eslint-plugin-prettier": "^2.6.2",
     "eslint-plugin-react": "6.10.0",
     "mocha": "3.2.0",
     "nyc": "10.2.0",
+    "prettier": "^1.13.7",
     "supertest": "3.0.0"
   }
 }
