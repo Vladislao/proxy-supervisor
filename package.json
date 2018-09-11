@@ -4,7 +4,7 @@
   "description": "Refresh, monitor and balance your proxies",
   "main": "index.js",
   "scripts": {
-    "test": "nyc mocha test/**/**/*.test.js"
+    "test": "nyc mocha 'test/**/*.test.js'"
   },
   "author": "vladislao <netcemetry@yandex.ru>",
   "license": "MIT",
@@ -29,6 +29,7 @@
   "homepage": "https://github.com/Vladislao/proxy-supervisor#readme",
   "dependencies": {
     "js-promisify": "1.1.0",
+    "pump": "^3.0.0",
     "request": "^2.88.0"
   },
   "devDependencies": {
@@ -36,7 +37,7 @@
     "casual": "1.5.11",
     "chai": "3.5.0",
     "chai-as-promised": "6.0.0",
-    "chai-spies": "0.7.1",
+    "chai-spies": "^0.7.1",
     "eslint": "3.19.0",
     "eslint-config-airbnb": "14.1.0",
     "eslint-config-prettier": "^2.9.0",

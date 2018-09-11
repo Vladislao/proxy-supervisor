@@ -89,7 +89,7 @@ describe("Monitor", function() {
     }, 30);
   });
 
-  it.skip("should not trigger stack overflow", done => {
+  it.skip("(slow) should not trigger stack overflow", done => {
     const monitor = new Monitor({ interval: 0 });
     const check = spy.on(monitor, "check");
 
