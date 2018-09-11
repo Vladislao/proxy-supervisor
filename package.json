@@ -29,7 +29,7 @@
   "homepage": "https://github.com/Vladislao/proxy-supervisor#readme",
   "dependencies": {
     "js-promisify": "1.1.0",
-    "request": "2.81.0"
+    "request": "^2.88.0"
   },
   "devDependencies": {
     "babel-eslint": "7.2.3",
@@ -44,8 +44,8 @@
     "eslint-plugin-jsx-a11y": "4.0.0",
     "eslint-plugin-prettier": "^2.6.2",
     "eslint-plugin-react": "6.10.0",
-    "mocha": "3.2.0",
-    "nyc": "10.2.0",
+    "mocha": "^5.2.0",
+    "nyc": "^13.1.0",
     "prettier": "^1.13.7",
     "supertest": "3.0.0"
   }
