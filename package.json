@@ -1,6 +1,6 @@
 {
   "name": "proxy-supervisor",
-  "version": "0.9.1",
+  "version": "0.9.2",
   "description": "Refresh, monitor and balance your proxies",
   "main": "index.js",
   "scripts": {
