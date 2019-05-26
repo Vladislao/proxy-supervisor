@@ -178,7 +178,7 @@ $ npm install proxy-supervisor
 #### monitor.onResponse(callback)
   You can specify your own handler for proxies. Callback should have a signature of *(err, proxy, res, body)* and return *true* for valid proxy and *false* otherwise.
 
-## Examples
+## Example
 
   To run the example, clone this repo and install its dependencies:
 
@@ -187,13 +187,19 @@ $ git clone git@github.com:Vladislao/proxy-supervisor.git
 $ cd proxy-supervisor
 $ npm install
 ```
-
-  Modify proxy.txt file
+  
+  Don't forget to modify your proxy.txt file. Grab any free proxies you can find.
 
   Then run the example with:
 
 ```bash
 $ node example
+```
+  
+  Here is a simple curl command to check your proxy server:
+
+```bash
+$ curl http://google.com -x http://localhost:9999
 ```
 
 ## Tests
