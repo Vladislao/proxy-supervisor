@@ -180,7 +180,7 @@ $ npm install proxy-supervisor
 
 ## Examples
 
-  To view the examples, clone the repo and install its dependencies:
+  To run the example, clone this repo and install its dependencies:
 
 ```bash
 $ git clone git@github.com:Vladislao/proxy-supervisor.git
@@ -188,7 +188,7 @@ $ cd proxy-supervisor
 $ npm install
 ```
 
-  Modify proxy.txt
+  Modify proxy.txt file
 
   Then run the example with:
 
@@ -198,7 +198,7 @@ $ node example
 
 ## Tests
 
-  To run the test suite, first install the dependencies, then run `npm test`:
+  To run the test suite, execute the following commands:
 
 ```bash
 $ npm install
