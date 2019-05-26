@@ -19,7 +19,7 @@ $ npm install proxy-supervisor
 
 ## How to play
 
-  If you want simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli)
+  If you want a simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli)
 
 ## Usage
 
@@ -58,7 +58,7 @@ $ npm install proxy-supervisor
   awesomeBalancer.subscribe(monitor);
   ```
 
-  Monitor will trigger for every 5 minutes and remove proxies, that didn't respond with successful status code. By default, all requests are made to [requestb.in](http://requestb.in/). Best practice would be to specify your own server, to make sure that proxies are really unavailable and it's not just endpoint failure.
+  Monitor will trigger for every 5 minutes and remove proxies, that didn't respond with successful status code. By default, all requests are made to [requestb.in](http://requestb.in/). Best practice would be to specify your own server, to make sure that proxies are really unavailable and it's not just an endpoint failure.
 
   You are not limited in the way you can use balancers. For example, you can have different balancers on different routes. Sources designed to work with multiple balancers.
 
@@ -180,7 +180,7 @@ $ npm install proxy-supervisor
 
 ## Examples
 
-  To view the examples, clone the repo and install the dependencies:
+  To view the examples, clone the repo and install its dependencies:
 
 ```bash
 $ git clone git@github.com:Vladislao/proxy-supervisor.git
@@ -188,10 +188,12 @@ $ cd proxy-supervisor
 $ npm install
 ```
 
-  Then run whichever example you want:
+  Modify proxy.txt
+
+  Then run the example with:
 
 ```bash
-$ node examples/monitor
+$ node example
 ```
 
 ## Tests
