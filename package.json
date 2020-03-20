@@ -4,7 +4,9 @@
   "description": "Refresh, monitor and balance your proxies",
   "main": "index.js",
   "scripts": {
-    "test": "nyc mocha 'test/**/*.test.js'"
+    "test": "nyc --reporter=text-summary mocha 'test/**/*.test.js'",
+    "report": "nyc report",
+    "postversion": "git push && git push --tags"
   },
   "author": "vladislao <netcemetry@yandex.ru>",
   "license": "MIT",
@@ -16,8 +18,6 @@
     "proxy",
     "proxy list",
     "proxy pool",
-    "proxy aggregator",
-    "proxy crawler",
     "proxy balancer"
   ],
   "engines": {
@@ -28,7 +28,6 @@
   },
   "homepage": "https://github.com/Vladislao/proxy-supervisor#readme",
   "dependencies": {
-    "js-promisify": "1.1.0",
     "pump": "^3.0.0",
     "request": "^2.88.0"
   },
@@ -46,8 +45,8 @@
     "eslint-plugin-prettier": "^2.6.2",
     "eslint-plugin-react": "6.10.0",
     "mocha": "^5.2.0",
-    "nyc": "^14.1.0",
-    "prettier": "^1.13.7",
+    "nyc": "^15.0.0",
+    "prettier": "^1.19.1",
     "supertest": "3.0.0"
   }
 }
