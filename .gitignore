@@ -3,6 +3,7 @@ node_modules
 bower_components
 .sass-cache
 .nyc_output
+playground
 
 config.js
 config.local.js
