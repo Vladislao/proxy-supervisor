@@ -1,314 +1,344 @@
-// const casual = require('casual');
-const promisify = require("js-promisify");
-const expect = require("chai").expect;
+const { expect, spy: createSpy } = require("chai");
 const http = require("http");
 const https = require("https");
 const fs = require("fs");
 
-const makeRotator = require("./tools/test_rotator");
-const makeProxy = require("./tools/test_proxy");
-const makeEndserver = require("./tools/test_endserver");
+const promisify = require("./tools/promisify");
+const { request, connect } = require("./tools/request");
+const defineProxy = require("./tools/proxy");
+const patch = require("./tools/server");
 
-const request = (protocol, options, body) =>
-  new Promise((resolve, reject) => {
-    options.headers["request-chain"] = "(s)";
-    const req = protocol
-      .request(options, res => {
-        let rawData = "";
-        res.on("data", chunk => (rawData += chunk));
-        res.on("end", () => {
-          res.headers["request-chain"] += " -> (e)";
-          resolve({ res: rawData, headers: res.headers });
-        });
-      })
-      .on("error", e => {
-        reject(e);
-      });
+const lib = require("../index");
 
-    if (body) req.write(body);
-    req.end();
+const ROTATOR_PORT = 23450;
+const PROXY_PORT = 23451;
+const TARGET_PORT = 23452;
+
+process.on("uncaughtException", function(err) {
+  console.log("uncaughtException");
+  console.log(err);
+});
+process.on("unhandledRejection", function(err) {
+  console.log("unhandledRejection");
+  console.log(err);
+});
+
+const ensureServers = (protocol, options) => {
+  const rotator = patch(http.createServer());
+  const proxy = patch(http.createServer());
+  const target = patch(protocol.createServer(options));
+
+  before(async () => {
+    await Promise.all([
+      promisify(rotator.listen, [ROTATOR_PORT, "127.0.0.1"], rotator),
+      promisify(proxy.listen, [PROXY_PORT, "127.0.0.1"], proxy),
+      promisify(target.listen, [TARGET_PORT, "127.0.0.1"], target)
+    ]);
   });
 
-const ensureServers = (protocol, protocolString) => {
-  const rotator = makeRotator(protocol, [
-    protocolString + "://127.0.0.1:23451"
-  ]);
-  const proxy = makeProxy(protocol);
-  const endserver = makeEndserver(protocol);
-
-  before(() =>
-    Promise.all([
-      promisify(rotator.listen, [23450, "127.0.0.1"], rotator),
-      promisify(proxy.listen, [23451, "127.0.0.1"], proxy),
-      promisify(endserver.listen, [23452, "127.0.0.1"], endserver)
-    ])
-  );
-
-  after(() =>
-    Promise.all([
-      promisify(rotator.close, [], rotator),
-      promisify(proxy.close, [], proxy),
-      promisify(endserver.close, [], endserver)
-    ])
-  );
-
-  process.on("exit", () => {
-    try {
-      return Promise.all([
-        promisify(proxy.close, [], proxy),
-        promisify(rotator.close, [], rotator),
-        promisify(endserver.close, [], endserver)
-      ]);
-    } catch (e) {
-      return Promise.reject(e);
-    }
-  });
-
-  return { rotator, proxy, endserver };
-};
-
-const test = (protocol, protocolString) => {
-  const { rotator, proxy, endserver } = ensureServers(protocol, protocolString);
   describe("Environment", () => {
     it("rotator should be available", () => {
       const conf = rotator.address();
       expect(conf).to.be.not.null;
-      expect(conf.port).to.be.eql(23450);
+      expect(conf.port).to.be.eql(ROTATOR_PORT);
     });
     it("proxy should be available", () => {
       const conf = proxy.address();
       expect(conf).to.be.not.null;
-      expect(conf.port).to.be.eql(23451);
+      expect(conf.port).to.be.eql(PROXY_PORT);
     });
     it("endserver should be available", () => {
-      const conf = endserver.address();
+      const conf = target.address();
       expect(conf).to.be.not.null;
-      expect(conf.port).to.be.eql(23452);
+      expect(conf.port).to.be.eql(TARGET_PORT);
     });
   });
 
-  describe("GET", () => {
-    it("should work without proxy", () => {
-      return request(protocol, {
-        hostname: "localhost",
-        port: 23452,
-        path: "/account/logon",
-        method: "GET",
-        headers: {
-          connection: "close"
-        }
-      }).then(response => {
-        expect(response.res).to.be.eql("OK");
-        expect(response.headers["request-chain"]).to.be.eql(
-          "(s) -> 127.0.0.1:23452 -> (e)"
-        );
-      });
-    });
-
-    it("should work with proxy", () => {
-      return request(protocol, {
-        hostname: "localhost",
-        port: 23451,
-        path: protocolString + "://localhost:23452/account/logon",
-        method: "GET",
-        headers: {
-          connection: "close",
-          cookie: "test=%#(%u0935uwj5"
-        }
-      }).then(response => {
-        expect(response.res).to.be.eql("OK");
-        expect(response.headers["request-chain"]).to.be.eql(
-          "(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)"
-        );
-      });
-    });
-
-    it("should work with proxy rotator", () => {
-      return request(protocol, {
-        hostname: "localhost",
-        port: 23450,
-        path: protocolString + "://localhost:23452/account/logon",
-        method: "GET",
-        headers: {
-          connection: "close",
-          cookie: "test=%#(%u0935uwj5"
-        }
-      }).then(response => {
-        expect(response.res).to.be.eql("OK");
-        expect(response.headers["request-chain"]).to.be.eql(
-          "(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)"
-        );
-      });
-    });
+  after(async () => {
+    await Promise.all([
+      promisify(rotator.close, [], rotator),
+      promisify(proxy.close, [], proxy),
+      promisify(target.close, [], target)
+    ]);
   });
 
-  describe("POST", () => {
-    describe("Chunked", () => {
-      it("should work without proxy", () => {
-        return request(
-          protocol,
-          {
-            hostname: "localhost",
-            port: 23452,
-            path: "/account/logon",
-            method: "POST",
-            headers: {
-              connection: "close"
-            }
-          },
-          "body"
-        ).then(response => {
-          expect(response.res).to.be.eql("OK");
-          expect(response.headers["request-chain"]).to.be.eql(
-            "(s) -> 127.0.0.1:23452 -> (e)"
-          );
-        });
-      });
-
-      it("should work with proxy", () => {
-        return request(
-          protocol,
-          {
-            hostname: "localhost",
-            port: 23451,
-            path: protocolString + "://localhost:23452/account/logon",
-            method: "POST",
-            headers: {
-              connection: "close",
-              cookie: "test=%#(%u0935uwj5"
-            }
-          },
-          "body"
-        ).then(response => {
-          expect(response.res).to.be.eql("OK");
-          expect(response.headers["request-chain"]).to.be.eql(
-            "(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)"
-          );
-        });
-      });
-
-      it("should work with proxy", () => {
-        return request(
-          protocol,
-          {
-            hostname: "localhost",
-            port: 23450,
-            path: protocolString + "://localhost:23452/account/logon",
-            method: "POST",
-            headers: {
-              connection: "close",
-              cookie: "test=%#(%u0935uwj5"
-            }
-          },
-          "body"
-        ).then(response => {
-          expect(response.res).to.be.eql("OK");
-          expect(response.headers["request-chain"]).to.be.eql(
-            "(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)"
-          );
-        });
-      });
-    });
-
-    describe("Content-Length", () => {
-      it("should work without proxy", () => {
-        return request(
-          protocol,
-          {
-            hostname: "localhost",
-            port: 23452,
-            path: "/account/logon",
-            method: "POST",
-            headers: {
-              Connection: "close",
-              Cookie: "test=%#(%u0935uwj5",
-              "Content-Length": Buffer.byteLength("body")
-            }
-          },
-          "body"
-        ).then(response => {
-          expect(response.res).to.be.eql("OK");
-          expect(response.headers["request-chain"]).to.be.eql(
-            "(s) -> 127.0.0.1:23452 -> (e)"
-          );
-        });
-      });
-
-      it("should work with proxy", () => {
-        return request(
-          protocol,
-          {
-            hostname: "localhost",
-            port: 23451,
-            path: protocolString + "://localhost:23452/account/logon",
-            method: "POST",
-            headers: {
-              Connection: "close",
-              Cookie: "test=%#(%u0935uwj5",
-              "Content-Length": Buffer.byteLength("body")
-            }
-          },
-          "body"
-        ).then(response => {
-          expect(response.res).to.be.eql("OK");
-          expect(response.headers["request-chain"]).to.be.eql(
-            "(s) -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)"
-          );
-        });
-      });
-
-      it("should work with proxy", () => {
-        return request(
-          protocol,
-          {
-            hostname: "localhost",
-            port: 23450,
-            path: protocolString + "://localhost:23452/account/logon",
-            method: "POST",
-            headers: {
-              Connection: "close",
-              Cookie: "test=%#(%u0935uwj5",
-              "Content-Length": Buffer.byteLength("body")
-            }
-          },
-          "body"
-        ).then(response => {
-          expect(response.res).to.be.eql("OK");
-          expect(response.headers["request-chain"]).to.be.eql(
-            "(s) -> 127.0.0.1:23450 -> 127.0.0.1:23451 -> 127.0.0.1:23452 -> (e)"
-          );
-        });
-      });
-    });
-  });
+  return { rotator, proxy, target };
 };
 
 describe("HTTP", () => {
-  test(http, "http");
+  const { rotator, proxy, target } = ensureServers(http);
+
+  // create balancer
+  const balancer = lib.balancer();
+
+  // create default proxy handlers
+  defineProxy(proxy);
+
+  // create default rotator handlers
+  const spy = createSpy();
+  const middleware = balancer.proxy({ timeout: 250 });
+  rotator.on("request", (req, res) => {
+    middleware(req, res, spy);
+  });
+
+  // create default target handlers
+  target.on("request", (req, res) => {
+    res.writeHead(200);
+    res.end();
+  });
+
+  describe("GET", () => {
+    beforeEach(() => {
+      balancer.proxies = new Map();
+      balancer.add("http://127.0.0.1:" + PROXY_PORT);
+      spy.reset();
+    });
+
+    it("() -> []", async () => {
+      const res = await request(
+        http.request({
+          hostname: "127.0.0.1",
+          port: TARGET_PORT
+        })
+      );
+      expect(res.statusCode).to.be.eql(200);
+      expect(spy).to.have.not.been.called;
+    });
+
+    it("() -> proxy -> []", async () => {
+      const res = await request(
+        http.request({
+          hostname: "127.0.0.1",
+          port: PROXY_PORT,
+          path: "http://localhost:" + TARGET_PORT
+        })
+      );
+      expect(res.statusCode).to.be.eql(200);
+      expect(spy).to.have.not.been.called;
+    });
+
+    it("() -> rotator -> proxy -> []", async () => {
+      const res = await request(
+        http.request({
+          hostname: "127.0.0.1",
+          port: ROTATOR_PORT,
+          path: "http://localhost:" + TARGET_PORT
+        })
+      );
+      expect(res.statusCode).to.be.eql(200);
+      expect(spy).to.have.been.called.once;
+    });
+
+    describe("Broken target", () => {
+      it("should work when not reachable", async () => {
+        const res = await request(
+          http.request({
+            hostname: "127.0.0.1",
+            port: ROTATOR_PORT,
+            path: "http://localhost:23453"
+          })
+        );
+        expect(res.statusCode).to.be.eql(502);
+        expect(spy).to.have.been.called.once;
+      });
+      it("should work when timeouts", async () => {
+        target.redefine("request", (req, res) => {
+          setTimeout(() => {
+            res.destroy();
+          }, 1500);
+        });
+
+        const res = await request(
+          http.request({
+            hostname: "127.0.0.1",
+            port: ROTATOR_PORT,
+            path: "http://localhost:" + TARGET_PORT
+          })
+        );
+        expect(res.statusCode).to.be.eql(502);
+        expect(spy).to.have.been.called.once;
+      });
+    });
+    describe("Broken proxy", () => {
+      it("should work when not reachable", async () => {
+        balancer.proxies = new Map();
+        balancer.add("http://127.0.0.1:23453");
+
+        const res = await request(
+          http.request({
+            hostname: "127.0.0.1",
+            port: ROTATOR_PORT,
+            path: "http://localhost:" + TARGET_PORT
+          })
+        );
+        expect(res.statusCode).to.be.eql(502);
+        expect(spy).to.have.been.called.once;
+      });
+      it("should work when timeouts", async () => {
+        proxy.redefine("request", (req, res) => {
+          setTimeout(() => {
+            res.destroy();
+          }, 1500);
+        });
+
+        const res = await request(
+          http.request({
+            hostname: "127.0.0.1",
+            port: ROTATOR_PORT,
+            path: "http://localhost:" + TARGET_PORT
+          })
+        );
+        expect(res.statusCode).to.be.eql(502);
+        expect(spy).to.have.been.called.once;
+      });
+    });
+  });
 });
 
 describe("HTTPS", () => {
-  const secure = {
+  // start servers
+  const { rotator, proxy, target } = ensureServers(https, {
     key: fs.readFileSync("test/keys/key.pem"),
     cert: fs.readFileSync("test/keys/cert.pem")
-  };
-  // patch server
-  const defaultCreateServer = https.createServer;
-  https.createServer = fn => defaultCreateServer(secure, fn);
+  });
 
-  // patch client
-  const defaultRequest = https.request;
-  https.request = (options, fn) => {
-    // const secured = Object.assign(options, secure);
-    // const agent = new https.Agent(secured);
-    return defaultRequest(
-      Object.assign({}, options, {
-        rejectUnauthorized: false,
-        strictSSL: false
-      }),
-      fn
-    );
-  };
+  // create balancer
+  const balancer = lib.balancer();
 
-  test(https, "https");
+  // create default proxy handlers
+  defineProxy(proxy);
+
+  // create default rotator handlers
+  rotator.on("request", balancer.proxy({ timeout: 250 }));
+  rotator.on("connect", balancer.connect({ timeout: 250 }));
+
+  // create default target handlers
+  target.on("request", (req, res) => {
+    res.writeHead(200);
+    res.end();
+  });
+
+  describe("GET", () => {
+    beforeEach(() => {
+      balancer.proxies = new Map();
+      balancer.add("http://127.0.0.1:" + PROXY_PORT);
+    });
+
+    it("() -> []", async () => {
+      const res = await request(
+        https.request({
+          hostname: "127.0.0.1",
+          port: TARGET_PORT,
+          rejectUnauthorized: false
+        })
+      );
+      expect(res.statusCode).to.be.eql(200);
+    });
+
+    it("() -> proxy -> []", async () => {
+      const connection = await connect({
+        hostname: "127.0.0.1",
+        port: PROXY_PORT,
+        path: "https://localhost:" + TARGET_PORT
+      });
+      expect(connection.res.statusCode).to.be.eql(200);
+
+      const res = await request(
+        https.request({
+          hostname: "127.0.0.1",
+          port: TARGET_PORT,
+          socket: connection.socket,
+          rejectUnauthorized: false,
+          agent: false
+        })
+      );
+
+      expect(res.statusCode).to.be.eql(200);
+    });
+
+    it("() -> rotator -> proxy -> []", async () => {
+      const connection = await connect({
+        hostname: "127.0.0.1",
+        port: ROTATOR_PORT,
+        path: "https://localhost:" + TARGET_PORT
+      });
+      expect(connection.res.statusCode).to.be.eql(200);
+
+      const res = await request(
+        https.request({
+          hostname: "127.0.0.1",
+          port: TARGET_PORT,
+          socket: connection.socket,
+          rejectUnauthorized: false,
+          agent: false
+        })
+      );
+
+      expect(res.statusCode).to.be.eql(200);
+    });
+
+    describe("Broken target", () => {
+      it("should work when not reachable", async () => {
+        const connection = await connect({
+          hostname: "127.0.0.1",
+          port: ROTATOR_PORT,
+          path: "https://localhost:23453"
+        });
+        expect(connection.res.statusCode).to.be.eql(502);
+      });
+      it("should work when timeouts", async () => {
+        target.redefine("request", (req, res) => {
+          setTimeout(() => {
+            res.destroy();
+          }, 1500);
+        });
+
+        const connection = await connect({
+          hostname: "127.0.0.1",
+          port: ROTATOR_PORT,
+          path: "https://localhost:" + TARGET_PORT
+        });
+        expect(connection.res.statusCode).to.be.eql(200);
+
+        await expect(
+          request(
+            https.request({
+              hostname: "127.0.0.1",
+              port: TARGET_PORT,
+              socket: connection.socket,
+              rejectUnauthorized: false,
+              agent: false
+            })
+          )
+        ).to.eventually.be.rejected;
+      });
+    });
+    describe("Broken proxy", () => {
+      it("should work when not reachable", async () => {
+        balancer.proxies = new Map();
+        balancer.add("http://127.0.0.1:23453");
+
+        const connection = await connect({
+          hostname: "127.0.0.1",
+          port: ROTATOR_PORT,
+          path: "https://localhost:" + TARGET_PORT
+        });
+        expect(connection.res.statusCode).to.be.eql(502);
+      });
+      it("should work when timeouts", async () => {
+        proxy.redefine("connect", (res, socket) => {
+          setTimeout(() => {
+            socket.destroy();
+          }, 1500);
+        });
+
+        const connection = await connect({
+          hostname: "127.0.0.1",
+          port: ROTATOR_PORT,
+          path: "https://localhost:" + TARGET_PORT
+        });
+        expect(connection.res.statusCode).to.be.eql(502);
+      });
+    });
+  });
 });
