@@ -29,8 +29,6 @@
   "homepage": "https://github.com/Vladislao/proxy-supervisor#readme",
   "dependencies": {},
   "devDependencies": {
-    "babel-eslint": "7.2.3",
-    "casual": "1.5.11",
     "chai": "3.5.0",
     "chai-as-promised": "6.0.0",
     "chai-spies": "^0.7.1",

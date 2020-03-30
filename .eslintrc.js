@@ -1,19 +1,18 @@
 module.exports = {
-  parser: "babel-eslint",
   env: {
     browser: false,
     es6: true,
     node: true
   },
-  extends: "eslint:recommended",
   parserOptions: {
-    allowImportExportEverywhere: true,
+    ecmaVersion: 2017,
     ecmaFeatures: {
       experimentalObjectRestSpread: true
     }
   },
+  extends: ["eslint:recommended", "prettier"],
   plugins: ["prettier"],
   rules: {
-    "prettier/prettier": 2
+    "prettier/prettier": "error"
   }
 };
