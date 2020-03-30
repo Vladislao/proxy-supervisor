@@ -1,7 +1,7 @@
-const expect = require("chai").expect;
-const vicodin = require("../../lib/balancer");
+const { expect } = require("chai");
+const lib = require("../../");
 
-const balancer = vicodin();
+const balancer = lib.balancer();
 
 describe("Default Balancer", () => {
   describe(".onAdd", () => {

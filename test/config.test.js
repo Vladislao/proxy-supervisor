@@ -4,3 +4,12 @@ const promises = require("chai-as-promised");
 
 chai.use(spies);
 chai.use(promises);
+
+process.on("uncaughtException", function(err) {
+  console.log("uncaughtException");
+  console.log(err);
+});
+process.on("unhandledRejection", function(err) {
+  console.log("unhandledRejection");
+  console.log(err);
+});

@@ -1,4 +1,4 @@
-const { pipeline, finished } = require("stream");
+const { pipeline } = require("stream");
 const http = require("http");
 const net = require("net");
 const url = require("url");

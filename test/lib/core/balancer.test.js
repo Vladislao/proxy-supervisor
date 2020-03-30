@@ -1,6 +1,6 @@
 const expect = require("chai").expect;
 const url = require("url");
-const Balancer = require("../../../lib/core/balancer");
+const { BalancerCore: Balancer } = require("../../../");
 
 describe("Core Balancer", () => {
   describe(".add", () => {
