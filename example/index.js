@@ -1,7 +1,7 @@
 const http = require("http");
 const { resolve } = require("path");
 const fs = require("fs");
-const supervisor = require("../index");
+const supervisor = require("../");
 
 const proxies = fs
   .readFileSync(resolve(__dirname, "proxy.txt"), "utf-8")
@@ -27,16 +27,26 @@ if (balancer.proxies.size === 0) {
   process.exit(1);
 }
 
-balancer.subscribe(supervisor.monitor());
+balancer.subscribe(supervisor.monitor({ target: "http://localhost:9998" }));
 
 const middleware = balancer.proxy();
-const server = http.createServer((req, res) => {
-  console.log(req.url);
-  return middleware(req, res, err => {
-    console.log(err);
+http
+  .createServer((req, res) => {
+    console.log(req.url);
+    return middleware(req, res, err => {
+      console.log(err);
+    });
+  })
+  .listen(9999, () => {
+    console.log("Proxy supervisor listening on port 9999");
   });
-});
 
-server.listen(9999, () => {
-  console.log("Listening on port 9999");
-});
+http
+  .createServer((req, res) => {
+    res.writeHead(200);
+    res.end();
+  })
+  .listen(9998, () => {
+    console.log("Proxy validator listening on port 9998");
+    console.log("Please, make sure port is open or disable monitor");
+  });
