@@ -77,6 +77,20 @@ describe("Integrational HTTP", () => {
       expect(spy).to.have.been.called.once;
     });
 
+    it("should return 502 when no proxy is available", async () => {
+      balancer.proxies = new Map();
+
+      const res = await request(
+        http.request({
+          hostname: "127.0.0.1",
+          port: ROTATOR_PORT,
+          path: "http://localhost:" + TARGET_PORT
+        })
+      );
+      expect(res.statusCode).to.be.eql(502);
+      expect(spy).to.have.been.called.once;
+    });
+
     describe("Broken target", () => {
       it("should work when not reachable", async () => {
         const res = await request(
@@ -105,6 +119,29 @@ describe("Integrational HTTP", () => {
         );
         expect(res.statusCode).to.be.eql(502);
         expect(spy).to.have.been.called.once;
+      });
+      it("should work when response is broken", async () => {
+        target.redefine("request", (req, res) => {
+          res.writeHead(200, { "Content-Length": 5 });
+          res.write("One");
+
+          setTimeout(() => {
+            res.destroy();
+          }, 1500);
+        });
+
+        try {
+          await request(
+            http.request({
+              hostname: "127.0.0.1",
+              port: ROTATOR_PORT,
+              path: "http://localhost:" + TARGET_PORT
+            })
+          );
+          expect.fail("should not resolve with inconsistent data");
+        } catch (e) {
+          expect(spy).to.have.been.called.once;
+        }
       });
     });
     describe("Broken proxy", () => {

@@ -1,4 +1,4 @@
-const expect = require("chai").expect;
+const { expect, spy } = require("chai");
 const url = require("url");
 const { BalancerCore: Balancer } = require("../../../");
 
@@ -101,6 +101,22 @@ describe("Core Balancer", () => {
     it("should return function", () => {
       const fn = new Balancer().proxy();
       expect(typeof fn).to.be.eql("function");
+    });
+  });
+
+  describe("._next", () => {
+    it("should throw if not provided", () => {
+      const balancer = new Balancer();
+      expect(balancer._next).to.throw();
+    });
+  });
+
+  describe(".onAdd", () => {
+    it("should overwrite ._init logic", () => {
+      const fn = spy.on(proxy => proxy);
+      new Balancer().onAdd(fn).add("127.0.0.1");
+
+      expect(fn).to.be.called.once;
     });
   });
 });

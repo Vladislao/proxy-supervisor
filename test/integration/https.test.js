@@ -96,6 +96,17 @@ describe("Integrational HTTPS", () => {
       expect(res.statusCode).to.be.eql(200);
     });
 
+    it("should return 502 when no proxy is available", async () => {
+      balancer.proxies = new Map();
+
+      const connection = await connect({
+        hostname: "127.0.0.1",
+        port: ROTATOR_PORT,
+        path: "https://localhost:" + TARGET_PORT
+      });
+      expect(connection.res.statusCode).to.be.eql(502);
+    });
+
     describe("Broken target", () => {
       it("should work when not reachable", async () => {
         const connection = await connect({
@@ -157,6 +168,19 @@ describe("Integrational HTTPS", () => {
           path: "https://localhost:" + TARGET_PORT
         });
         expect(connection.res.statusCode).to.be.eql(502);
+      });
+      it("should work when proxy respond with non 2xx status code", async () => {
+        proxy.redefine("connect", (res, socket) => {
+          socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+          socket.end();
+        });
+
+        const connection = await connect({
+          hostname: "127.0.0.1",
+          port: ROTATOR_PORT,
+          path: "https://localhost:" + TARGET_PORT
+        });
+        expect(connection.res.statusCode).to.be.eql(404);
       });
     });
   });

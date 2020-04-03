@@ -1,4 +1,3 @@
-const { finished } = require("stream");
 const http = require("http");
 
 module.exports.connect = options =>
@@ -22,14 +21,18 @@ module.exports.connect = options =>
 
 module.exports.request = request =>
   new Promise((resolve, reject) => {
-    finished(request, err => {
-      if (err) return reject(err);
-    });
     request.once("error", err => {
       reject(err);
     });
     request.once("response", res => {
-      resolve(res);
+      let body = "";
+      res.on("data", chunk => {
+        body += chunk;
+      });
+      res.once("end", () => {
+        res.body = body;
+        resolve(res);
+      });
     });
     request.setTimeout(1000, () => {
       request.destroy(new Error("REQUEST TIMEOUT"));

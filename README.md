@@ -150,7 +150,7 @@ Creates a handler for HTTP CONNECT method. [It is used to open a tunnel between 
 
 - **callback** _\<Function\>_ Callback function that returns a next proxy to be used.
 
-You can specify your own balancing algorithm. Callback has a signature of _(proxies)_ and should return a single _\<Url\>_ from a list.
+You can specify your own balancing algorithm. Callback has a signature of _(proxies, req)_ and should return a single _\<Url\>_ from a list.
 
 #### balancer.onAdd(callback)
 
@@ -162,13 +162,13 @@ Callback will be called each time a new proxy is added to the list. Callback has
 
 - **callback** _\<Function\>_ Callback function that handles response statuses.
 
-Callback has a signature of _(proxy, res)_ and will be called each time a request is completed. State of the proxy can be modified.
+Callback has a signature of _(proxy, res, req)_ and will be called each time a request is completed. State of the proxy can be modified.
 
 #### balancer.onError(callback)
 
 - **callback** _\<Function\>_ Callback function that handles request errors.
 
-Callback has a signature of _(proxy, err)_ and will be called each time a request resulted in an error. State of the proxy can be modified.
+Callback has a signature of _(proxy, err, req)_ and will be called each time a request resulted in an error. State of the proxy can be modified.
 
 ### Source
 

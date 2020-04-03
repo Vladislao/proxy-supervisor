@@ -1,85 +1,120 @@
 const { expect } = require("chai");
 const lib = require("../../");
 
-const balancer = lib.balancer();
+const PROXY = "http://proxy.com/";
+const TARGET = "http://google.com/";
 
 describe("Default Balancer", () => {
-  describe(".onAdd", () => {
-    it("should initialize with required fields", () => {
-      const proxy = balancer._init({ url: "http://127.0.0.1:3333" });
-
-      expect(proxy.url).to.be.eql("http://127.0.0.1:3333");
-      expect(proxy.blockCount).to.be.eql(0);
-      expect(proxy.unblockDateTime).to.be.eql(0);
-      expect(proxy.usedDateTime).to.be.eql(0);
-    });
-  });
-
   describe(".onResponse", () => {
     it("should block proxy on failure", () => {
-      const proxy = balancer._init({});
-      expect(proxy.blockCount).to.be.eql(0);
+      const balancer = lib.balancer().add(PROXY);
+      const proxy = balancer.proxies.values()[0];
 
-      balancer._response(proxy, { statusCode: 403 });
-      balancer._response(proxy, { statusCode: 403 });
-      balancer._response(proxy, { statusCode: 403 });
+      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
+      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
+      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
 
-      expect(proxy.blockCount).to.be.eql(3);
-      expect(proxy.unblockDateTime).to.be.gt(Date.now());
+      const params = balancer.__resolver.get("google.com").get(proxy);
+
+      expect(params.blockCount).to.be.eql(3);
+      expect(params.unblockDateTime).to.be.gt(Date.now());
     });
 
     it("should unblock proxy on success", () => {
-      const node = balancer._init({});
-      expect(node.blockCount).to.be.eql(0);
+      const balancer = lib.balancer().add(PROXY);
+      const proxy = balancer.proxies.values()[0];
 
-      balancer._response(node, { statusCode: 403 });
-      balancer._response(node, { statusCode: 403 });
-      balancer._response(node, { statusCode: 403 });
+      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
+      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
+      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
 
-      expect(node.blockCount).to.be.eql(3);
-      expect(node.unblockDateTime).to.be.gt(Date.now());
+      const params1 = balancer.__resolver.get("google.com").get(proxy);
+      expect(params1.blockCount).to.be.eql(3);
+      expect(params1.unblockDateTime).to.be.gt(Date.now());
 
-      balancer._response(node, { statusCode: 200 });
+      balancer._response(proxy, { statusCode: 200 }, { url: TARGET });
 
-      expect(node.blockCount).to.be.eql(0);
-      expect(node.unblockDateTime).to.be.lt(Date.now());
+      const params2 = balancer.__resolver.get("google.com").get(proxy);
+      expect(params2.blockCount).to.be.eql(0);
+      expect(params2.unblockDateTime).to.be.lt(Date.now());
+    });
+  });
+
+  describe(".onError", () => {
+    it("should block proxy on failure", () => {
+      const balancer = lib.balancer().add(PROXY);
+      const proxy = balancer.proxies.values()[0];
+
+      balancer._error(proxy, {}, { url: TARGET });
+      balancer._error(proxy, {}, { url: TARGET });
+      balancer._error(proxy, {}, { url: TARGET });
+
+      const params = balancer.__resolver.get("google.com").get(proxy);
+
+      expect(params.blockCount).to.be.eql(3);
+      expect(params.unblockDateTime).to.be.gt(Date.now());
     });
   });
 
   describe(".onNext", () => {
     it("should return least used unblocked proxy", () => {
-      const proxies = [
-        balancer._init({}),
-        balancer._init({}),
-        balancer._init({})
-      ];
+      const balancer = lib
+        .balancer()
+        .add([
+          "http://proxy1.com/",
+          "http://proxy2.com/",
+          "http://proxy3.com/"
+        ]);
 
-      // recently used
-      proxies[0].usedDateTime = Date.now();
-      // blocked
-      proxies[1].unblockDateTime = Date.now() + 60000;
+      const proxies = Array.from(balancer.proxies.values());
+      balancer.__resolver
+        .update("google.com", proxies[0], v => ({
+          ...v,
+          // recently used
+          usedDateTime: Date.now()
+        }))
+        .update("google.com", proxies[1], v => ({
+          ...v,
+          // blocked
+          blockCount: 3,
+          unblockDateTime: Date.now() + 60000
+        }));
 
       // should return proxies[2]
-      const next = balancer._next(proxies);
+      const next = balancer._next(proxies, { url: TARGET });
       expect(next).to.be.equal(proxies[2]);
-      expect(next.usedDateTime).to.be.gt(0);
+
+      const params = balancer.__resolver.get("google.com").get(proxies[2]);
+      expect(params.usedDateTime).to.be.gt(0);
     });
 
     it("should return least used available proxy when all proxies are blocked", () => {
-      const proxies = [balancer._init({}), balancer._init({})];
+      const balancer = lib
+        .balancer()
+        .add(["http://proxy1.com/", "http://proxy2.com/"]);
 
-      // recently used and blocked
-      proxies[0].usedDateTime = Date.now();
-      proxies[0].unblockDateTime = Date.now() + 60000;
-      // blocked
-      proxies[1].usedDateTime = 0;
-      proxies[1].unblockDateTime = Date.now() + 60000;
+      const proxies = Array.from(balancer.proxies.values());
+      balancer.__resolver
+        .update("google.com", proxies[0], v => ({
+          ...v,
+          // used and blocked
+          usedDateTime: Date.now(),
+          blockCount: 3,
+          unblockDateTime: Date.now() + 60000
+        }))
+        .update("google.com", proxies[1], v => ({
+          ...v,
+          // blocked
+          blockCount: 3,
+          unblockDateTime: Date.now() + 60000
+        }));
 
       // should return proxies[1]
-      const next = balancer._next(proxies);
+      const next = balancer._next(proxies, { url: TARGET });
+      expect(next).to.be.equal(proxies[1]);
 
-      expect(next).to.be.equal(proxies[0]);
-      expect(next.usedDateTime).to.be.gt(0);
+      const params = balancer.__resolver.get("google.com").get(proxies[1]);
+      expect(params.usedDateTime).to.be.gt(0);
     });
   });
 });

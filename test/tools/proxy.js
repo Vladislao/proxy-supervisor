@@ -21,9 +21,6 @@ module.exports = server => {
     });
 
     targetReq.once("response", targetRes => {
-      targetRes.setTimeout(500, () => {
-        targetRes.destroy(new Error("TIMEOUT"));
-      });
       clientRes.writeHead(
         targetRes.statusCode,
         targetRes.statusMessage,
