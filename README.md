@@ -226,7 +226,6 @@ To run the example, clone this repo and install its dependencies:
 ```bash
 $ git clone git@github.com:Vladislao/proxy-supervisor.git
 $ cd proxy-supervisor
-$ npm install
 ```
 
 Don't forget to modify your proxy.txt file. Grab any free proxies you can find.
