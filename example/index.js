@@ -1,3 +1,5 @@
+/* eslint no-console: "off" */
+
 const http = require("http");
 const { resolve } = require("path");
 const fs = require("fs");

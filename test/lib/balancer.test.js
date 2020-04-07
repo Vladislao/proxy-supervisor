@@ -67,18 +67,20 @@ describe("Default Balancer", () => {
         ]);
 
       const proxies = Array.from(balancer.proxies.values());
-      balancer.__resolver
-        .update("google.com", proxies[0], v => ({
-          ...v,
-          // recently used
-          usedDateTime: Date.now()
-        }))
-        .update("google.com", proxies[1], v => ({
-          ...v,
-          // blocked
-          blockCount: 3,
-          unblockDateTime: Date.now() + 60000
-        }));
+      balancer.__resolver.update("google.com", r =>
+        r
+          .update(proxies[0], v => ({
+            ...v,
+            // recently used
+            usedDateTime: Date.now()
+          }))
+          .update(proxies[1], v => ({
+            ...v,
+            // blocked
+            blockCount: 3,
+            unblockDateTime: Date.now() + 60000
+          }))
+      );
 
       // should return proxies[2]
       const next = balancer._next(proxies, { url: TARGET });
@@ -94,20 +96,22 @@ describe("Default Balancer", () => {
         .add(["http://proxy1.com/", "http://proxy2.com/"]);
 
       const proxies = Array.from(balancer.proxies.values());
-      balancer.__resolver
-        .update("google.com", proxies[0], v => ({
-          ...v,
-          // used and blocked
-          usedDateTime: Date.now(),
-          blockCount: 3,
-          unblockDateTime: Date.now() + 60000
-        }))
-        .update("google.com", proxies[1], v => ({
-          ...v,
-          // blocked
-          blockCount: 3,
-          unblockDateTime: Date.now() + 60000
-        }));
+      balancer.__resolver.update("google.com", r =>
+        r
+          .update(proxies[0], v => ({
+            ...v,
+            // used and blocked
+            usedDateTime: Date.now(),
+            blockCount: 3,
+            unblockDateTime: Date.now() + 60000
+          }))
+          .update(proxies[1], v => ({
+            ...v,
+            // blocked
+            blockCount: 3,
+            unblockDateTime: Date.now() + 60000
+          }))
+      );
 
       // should return proxies[1]
       const next = balancer._next(proxies, { url: TARGET });

@@ -33,7 +33,7 @@ describe("Monitor", () => {
       expect(check).to.be.spy;
       expect(check).to.have.been.called();
       done();
-    }, 30);
+    }, 10);
   });
 
   it("should check periodically even if empty", done => {
@@ -46,7 +46,7 @@ describe("Monitor", () => {
       expect(check).to.be.spy;
       expect(check).to.have.been.called.gt(2);
       done();
-    }, 30);
+    }, 10);
   });
 
   it.skip("(slow) should not trigger stack overflow", done => {
