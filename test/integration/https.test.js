@@ -1,4 +1,4 @@
-const { expect } = require("chai");
+const { expect, spy: createSpy } = require("chai");
 const https = require("https");
 const fs = require("fs");
 
@@ -11,6 +11,7 @@ const {
 
 const { request, connect } = require("../tools/request");
 const defineProxy = require("../tools/proxy");
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const lib = require("../../");
 
@@ -28,8 +29,11 @@ describe("Integrational HTTPS", () => {
   defineProxy(proxy);
 
   // create default rotator handlers
-  rotator.on("request", balancer.proxy({ timeout: 250 }));
-  rotator.on("connect", balancer.connect({ timeout: 250 }));
+  const spy = createSpy();
+  const middleware = balancer.connect({ timeout: 250 });
+  rotator.on("connect", (req, socket, head) => {
+    middleware(req, socket, head, spy);
+  });
 
   // create default target handlers
   target.on("request", (req, res) => {
@@ -41,6 +45,7 @@ describe("Integrational HTTPS", () => {
     beforeEach(() => {
       balancer.proxies = new Map();
       balancer.add("http://127.0.0.1:" + PROXY_PORT);
+      spy.reset();
     });
 
     it("() -> []", async () => {
@@ -52,6 +57,7 @@ describe("Integrational HTTPS", () => {
         })
       );
       expect(res.statusCode).to.be.eql(200);
+      expect(spy).to.have.not.been.called;
     });
 
     it("() -> proxy -> []", async () => {
@@ -73,6 +79,7 @@ describe("Integrational HTTPS", () => {
       );
 
       expect(res.statusCode).to.be.eql(200);
+      expect(spy).to.have.not.been.called;
     });
 
     it("() -> rotator -> proxy -> []", async () => {
@@ -94,6 +101,9 @@ describe("Integrational HTTPS", () => {
       );
 
       expect(res.statusCode).to.be.eql(200);
+
+      await delay(5);
+      expect(spy).to.have.been.called.once;
     });
 
     it("should return 502 when no proxy is available", async () => {
@@ -105,6 +115,9 @@ describe("Integrational HTTPS", () => {
         path: "https://localhost:" + TARGET_PORT
       });
       expect(connection.res.statusCode).to.be.eql(502);
+
+      await delay(5);
+      expect(spy).to.have.been.called.once;
     });
 
     describe("Broken target", () => {
@@ -115,6 +128,9 @@ describe("Integrational HTTPS", () => {
           path: "https://localhost:23453"
         });
         expect(connection.res.statusCode).to.be.eql(502);
+
+        await delay(5);
+        expect(spy).to.have.been.called.once;
       });
       it("should work when timeouts", async () => {
         target.redefine("request", (req, res) => {
@@ -141,6 +157,9 @@ describe("Integrational HTTPS", () => {
             })
           )
         ).to.eventually.be.rejected;
+
+        await delay(5);
+        expect(spy).to.have.been.called.once;
       });
     });
     describe("Broken proxy", () => {
@@ -154,6 +173,9 @@ describe("Integrational HTTPS", () => {
           path: "https://localhost:" + TARGET_PORT
         });
         expect(connection.res.statusCode).to.be.eql(502);
+
+        await delay(5);
+        expect(spy).to.have.been.called.once;
       });
       it("should work when timeouts", async () => {
         proxy.redefine("connect", (res, socket) => {
@@ -168,6 +190,9 @@ describe("Integrational HTTPS", () => {
           path: "https://localhost:" + TARGET_PORT
         });
         expect(connection.res.statusCode).to.be.eql(502);
+
+        await delay(5);
+        expect(spy).to.have.been.called.once;
       });
       it("should work when proxy respond with non 2xx status code", async () => {
         proxy.redefine("connect", (res, socket) => {
@@ -181,6 +206,9 @@ describe("Integrational HTTPS", () => {
           path: "https://localhost:" + TARGET_PORT
         });
         expect(connection.res.statusCode).to.be.eql(404);
+
+        await delay(5);
+        expect(spy).to.have.been.called.once;
       });
     });
   });

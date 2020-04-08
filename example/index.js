@@ -31,14 +31,9 @@ if (balancer.proxies.size === 0) {
 
 balancer.subscribe(supervisor.monitor({ target: "http://localhost:9998" }));
 
-const middleware = balancer.proxy();
 http
-  .createServer((req, res) => {
-    console.log(req.url);
-    return middleware(req, res, err => {
-      console.log(err);
-    });
-  })
+  .createServer(balancer.proxy())
+  .on("connect", balancer.connect())
   .listen(9999, () => {
     console.log("Proxy supervisor listening on port 9999");
   });
