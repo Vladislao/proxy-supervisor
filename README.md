@@ -19,7 +19,7 @@ $ npm install proxy-supervisor
 
 ## How to play
 
-If you want a simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli)
+If you want a simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli) or [dockerized proxy-supervisor](https://github.com/chugunov/docker-proxy-supervisor).
 
 ## Usage
 
@@ -226,7 +226,6 @@ To run the example, clone this repo and install its dependencies:
 ```bash
 $ git clone git@github.com:Vladislao/proxy-supervisor.git
 $ cd proxy-supervisor
-$ npm install
 ```
 
 Don't forget to modify your proxy.txt file. Grab any free proxies you can find.
