@@ -50,14 +50,18 @@ module.exports = server => {
   server.on("connect", (req, clientSocket, head) => {
     // Connect to an origin server
     const { port, hostname } = url.parse(req.url);
-    const serverSocket = net.connect(port || 80, hostname, () => {
-      clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
-      serverSocket.write(head);
+    const serverSocket = net.connect(
+      port || 80,
+      hostname,
+      () => {
+        clientSocket.write("HTTP/1.1 200 Connection Established\r\n\r\n");
+        serverSocket.write(head);
 
-      pipeline(serverSocket, clientSocket, serverSocket, () => {
-        // no handle for errors on purpose
-      });
-    });
+        pipeline(serverSocket, clientSocket, serverSocket, () => {
+          // no handle for errors on purpose
+        });
+      }
+    );
 
     serverSocket.once("error", () => {
       setTimeout(() => {
