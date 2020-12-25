@@ -10,9 +10,9 @@ describe("Default Balancer", () => {
       const balancer = lib.balancer().add(PROXY);
       const proxy = balancer.proxies.values()[0];
 
-      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
-      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
-      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
+      balancer._response(proxy, TARGET, { statusCode: 403 });
+      balancer._response(proxy, TARGET, { statusCode: 403 });
+      balancer._response(proxy, TARGET, { statusCode: 403 });
 
       const params = balancer.__resolver.get("google.com").get(proxy);
 
@@ -24,15 +24,15 @@ describe("Default Balancer", () => {
       const balancer = lib.balancer().add(PROXY);
       const proxy = balancer.proxies.values()[0];
 
-      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
-      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
-      balancer._response(proxy, { statusCode: 403 }, { url: TARGET });
+      balancer._response(proxy, TARGET, { statusCode: 403 });
+      balancer._response(proxy, TARGET, { statusCode: 403 });
+      balancer._response(proxy, TARGET, { statusCode: 403 });
 
       const params1 = balancer.__resolver.get("google.com").get(proxy);
       expect(params1.blockCount).to.be.eql(3);
       expect(params1.unblockDateTime).to.be.gt(Date.now());
 
-      balancer._response(proxy, { statusCode: 200 }, { url: TARGET });
+      balancer._response(proxy, TARGET, { statusCode: 200 });
 
       const params2 = balancer.__resolver.get("google.com").get(proxy);
       expect(params2.blockCount).to.be.eql(0);
@@ -45,9 +45,9 @@ describe("Default Balancer", () => {
       const balancer = lib.balancer().add(PROXY);
       const proxy = balancer.proxies.values()[0];
 
-      balancer._error(proxy, {}, { url: TARGET });
-      balancer._error(proxy, {}, { url: TARGET });
-      balancer._error(proxy, {}, { url: TARGET });
+      balancer._error(proxy, TARGET);
+      balancer._error(proxy, TARGET);
+      balancer._error(proxy, TARGET);
 
       const params = balancer.__resolver.get("google.com").get(proxy);
 
@@ -83,7 +83,7 @@ describe("Default Balancer", () => {
       );
 
       // should return proxies[2]
-      const next = balancer._next(proxies, { url: TARGET });
+      const next = balancer._next(proxies, TARGET);
       expect(next).to.be.equal(proxies[2]);
 
       const params = balancer.__resolver.get("google.com").get(proxies[2]);
@@ -114,7 +114,7 @@ describe("Default Balancer", () => {
       );
 
       // should return proxies[1]
-      const next = balancer._next(proxies, { url: TARGET });
+      const next = balancer._next(proxies, TARGET);
       expect(next).to.be.equal(proxies[1]);
 
       const params = balancer.__resolver.get("google.com").get(proxies[1]);
