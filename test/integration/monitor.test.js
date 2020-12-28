@@ -77,7 +77,7 @@ describe("Integrational Monitor", () => {
       proxy.redefine("request", (req, res) => {
         setTimeout(() => {
           res.destroy();
-        }, 1500);
+        }, 1000);
       });
       const remove = spy.on(listener, "remove");
 

@@ -131,7 +131,7 @@ const execute = targetMode => {
           target.redefine("request", (req, res) => {
             setTimeout(() => {
               res.destroy();
-            }, 1500);
+            }, 1000);
           });
 
           const res = await request(
@@ -155,7 +155,7 @@ const execute = targetMode => {
 
             setTimeout(() => {
               res.destroy();
-            }, 1500);
+            }, 1000);
           });
 
           try {
@@ -199,7 +199,7 @@ const execute = targetMode => {
           proxy.redefine("request", (req, res) => {
             setTimeout(() => {
               res.destroy();
-            }, 1500);
+            }, 1000);
           });
 
           const res = await request(

@@ -136,7 +136,7 @@ describe("(TARGET_MODE) Integrational HTTPS", () => {
         target.redefine("request", (req, res) => {
           setTimeout(() => {
             res.destroy();
-          }, 1500);
+          }, 1000);
         });
 
         const res = await request(
@@ -173,7 +173,7 @@ describe("(TARGET_MODE) Integrational HTTPS", () => {
         proxy.redefine("connect", (res, socket) => {
           setTimeout(() => {
             socket.destroy();
-          }, 1500);
+          }, 1000);
         });
 
         const res = await request(

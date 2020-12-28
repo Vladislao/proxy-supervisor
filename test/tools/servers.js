@@ -55,7 +55,8 @@ module.exports.default = (protocol, options) => {
     });
   });
 
-  after(async () => {
+  after(async function() {
+    this.timeout(5000);
     await Promise.all([
       promisify(rotator.close, [], rotator),
       promisify(proxy.close, [], proxy),
