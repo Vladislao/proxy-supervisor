@@ -8,6 +8,7 @@ const PROXY_PORT = 23451;
 const TARGET_PORT = 23452;
 
 const patch = server => {
+  const connections = [];
   server.redefine = (event, fn) => {
     const listeners = server.listeners(event);
 
@@ -20,6 +21,17 @@ const patch = server => {
         server.on(event, v);
       });
     });
+  };
+  server.on("connection", c => {
+    var key = c.remoteAddress + ":" + c.remotePort;
+    connections[key] = c;
+    c.on("close", function() {
+      delete connections[key];
+    });
+  });
+  server.destroy = function(cb) {
+    server.close(cb);
+    for (var key in connections) connections[key].destroy();
   };
   return server;
 };
@@ -58,9 +70,9 @@ module.exports.default = (protocol, options) => {
   after(async function() {
     this.timeout(5000);
     await Promise.all([
-      promisify(rotator.close, [], rotator),
-      promisify(proxy.close, [], proxy),
-      promisify(target.close, [], target)
+      promisify(rotator.destroy, [], rotator),
+      promisify(proxy.destroy, [], proxy),
+      promisify(target.destroy, [], target)
     ]);
   });
 
