@@ -19,7 +19,7 @@ $ npm install proxy-supervisor
 
 ## How to play
 
-If you want a simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli) or [dockerized proxy-supervisor](https://github.com/chugunov/docker-proxy-supervisor).
+If you want a simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli) or [dockerized proxy-supervisor](https://hub.docker.com/r/chugunov/docker-proxy-supervisor). 
 
 ## Usage
 
