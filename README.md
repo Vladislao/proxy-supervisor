@@ -17,13 +17,13 @@ $ npm install proxy-supervisor
 - High performance
 - High test coverage
 
-## How to play
+## How to
 
-If you want a simple standalone proxy balancer from command line check out [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli) or [dockerized proxy-supervisor](https://hub.docker.com/r/vladislaosan/proxy-supervisor). 
+For a straightforward standalone proxy balancer accessible via command line, explore [proxy-supervisor-cli](https://github.com/vladislao/proxy-supervisor-cli) or [dockerized proxy-supervisor](https://hub.docker.com/r/vladislaosan/proxy-supervisor). 
 
 ## Usage
 
-Just initialize a balancer and add some proxies.
+Start by initializing a balancer and adding your proxies:
 
 ```javascript
 const http = require("http");
@@ -33,68 +33,35 @@ const awesomeBalancer = balancer().add([
   "http://SOME_PROXY:38403",
   "http://OTHER_PROXY:61637"
 ]);
-```
 
-Great! Now let's get it to work. Create a middleware and put it in your route. To simplify example, we will use plain http server.
+// Now, integrate it into your application. Below, we set up a basic HTTP server using the balancer as middleware.
 
-```javascript
 http
   .createServer(awesomeBalancer.proxy())
   .on("connect", awesomeBalancer.connect())
   .listen(3000);
 ```
 
-Awesome! Next step is to set your balancing server as a proxy server wherever you want to use proxies. This server will proxy requests using specified list of proxies. The final trace will look like that _(you) -> (balancer) -> (proxy) -> (endpoint)_.
+Great! The next step is to configure your balancing server as the proxy server in any application that needs to use proxies. This setup will channel requests through the specified proxies, forming a path like _(you) -> (balancer) -> (proxy) -> (endpoint)_.
 
-Finding proxies and adding them by hand is painful. Even more, you will probably want to remove dead ones. To simplify that process you can use _sources_. Let's add a few sources.
+#### Authentication
 
-```javascript
-const { balancer } = require("proxy-supervisor");
-const source = require("ps-free-proxy-list");
-
-const awesomeBalancer = balancer().subscribe(source);
-```
-
-Done! Sources will automatically replenish your balancer with new proxies. You should be able to find more sources on [github](https://github.com/). So, what about unreachable proxies? Let's add a monitor to filter them out!
+In scenarios where a proxy requires authorization, use the _formatHeaders_ function. This function enables you to embed proxy credentials in the URL (e.g., https://login:password@MY_PROXY:3123) and set the appropriate authorization header. Here's how to implement it:
 
 ```javascript
-const { monitor } = require("proxy-supervisor");
-awesomeBalancer.subscribe(monitor({ target: "http://YOUR_IP:3001" }));
-```
+const formatHeaders = (proxy, headers) => {
+  if (!proxy.url.auth) return headers;
+  return {
+    ...headers,
+    "Auth-Proxy":
+      "Basic " + Buffer.from(proxy.url.auth).toString("base64"),
+  };
+};
 
-Monitor will trigger for every 5 minutes and remove proxies, that didn't respond with successful status code. Best practice would be to specify your own server, and make sure port is open.
-
-```javascript
-const http = require("http");
 http
-  .createServer((req, res) => {
-    res.writeHead(200);
-    res.end();
-  })
-  .listen(3001);
-```
-
-You are not limited in the way you can use balancers. For example, you can have different balancers on different routes. Sources designed to work with multiple balancers.
-
-```javascript
-const express = require("experss");
-const { balancer, monitor } = require("proxy-supervisor");
-const source = require("ps-nordvpn");
-
-const freeBalancer = balancer()
-  .subscribe(source)
-  .subscribe(monitor({ target: "http://YOUR_IP:3001" }));
-
-const privateBalancer = balancer()
-  .add(["http://SOME_PROXY:38403", "http://OTHER_PROXY:61637"])
-  .subscribe(monitor);
-
-const app = express()
-  .use("/free", freeBalancer.proxy())
-  .use("/private", privateBalancer.proxy())
-  .on("connect", privateBalancer.connect());
-
-app.listen(3000);
+  .createServer(balancer.proxy({ formatHeaders }))
+  .on("connect", balancer.connect({ formatHeaders }))
+  .listen(3000);
 ```
 
 ## Design
@@ -131,6 +98,8 @@ Subscribes to the specified source.
 - **options** _\<Object\>_ Configuration details.
 
   - **timeout** _\<Integer\>_ Sets the socket to timeout after timeout milliseconds of inactivity. Note that increasing the timeout beyond the OS-wide TCP connection timeout will not have any effect ([the default in Linux can be anywhere from 20-120 seconds](http://www.sekuda.com/overriding_the_default_linux_kernel_20_second_tcp_socket_connect_timeout)). Defaults to 30 seconds.
+ 
+  - **formatHeaders** _\<Function\>_ This function is designed to modify headers before a request is sent through your proxy. It is commonly used for handling proxy authorization. The function signature is _(proxy, headers)_, and it must return an updated headers object.
 
 - Returns: _\<Function\>_
 
@@ -141,6 +110,8 @@ Creates a middleware function. Middleware has a signature of _(req, res, next)_.
 - **options** _\<Object\>_ Configuration details.
 
   - **timeout** _\<Integer\>_ Sets the socket to timeout after timeout milliseconds of inactivity. Defaults to 30 seconds.
+
+  - **formatHeaders** _\<Function\>_ This function is designed to modify headers before a request is sent through your proxy. It is commonly used for handling proxy authorization. The function signature is _(proxy, headers)_, and it must return an updated headers object.
 
 - Returns: _\<Function\>_
 
