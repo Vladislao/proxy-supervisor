@@ -39,7 +39,12 @@ module.exports.request = request =>
         res.body = body;
         resolve(res);
       });
+      res.once("aborted", () => {
+        debug("response aborted");
+        reject(new Error("RESPONSE ABORTED"));
+      });
     });
+
     request.setTimeout(1000, () => {
       request.destroy(new Error("REQUEST TIMEOUT"));
     });
